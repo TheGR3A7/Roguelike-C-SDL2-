@@ -5,5 +5,10 @@
 #include "func.h"
 #include "Player.h"
 
+struct MapElement {
+    char symbol;
+    SDL_Texture* texture;
+    SDL_Rect position;
+};
 
 void Game(SDL_Renderer* ren);

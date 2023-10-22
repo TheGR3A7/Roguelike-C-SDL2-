@@ -5,3 +5,4 @@
 #define FPS 120
 #define DIR_RIGHT 1
 #define DIR_LEFT 2
+#define KNIFE_ATTACK_RADIUS 100
