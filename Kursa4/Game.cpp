@@ -135,43 +135,56 @@ void LoadObstacleElements(SDL_Renderer* ren, MapElement obstElements[MAP_HEIGHT]
 // Loc 2: y (200, 400), x<1000 || y (50, 550), x > 1000
 // Loc 3: y (50, 550), x < 1000
 
-void CheckLocation(Player player, bool location1, bool location2, bool location3)
+void CheckLocation(Player& player, SDL_Renderer* ren, MapElement surfElements[MAP_HEIGHT][MAP_WIDTH], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], int& currentLocation)
 {
-	if (location1 = true && (player.position.y >= 200 && player.position.x >= 1000 && player.position.y <= 400))
+	if (currentLocation == 1) 
 	{
-		location1 = false;
-		LoadMapDataFromFile("surfLoc2.txt", "obstLoc2.txt");
-		location2 = true;
+		if ((player.position.y >= 250 - (player.position.h/2))&& (player.position.x >= WINDOW_WIDTH - (player.position.w/2)) && (player.position.y <= 400 - (player.position.h-15)))
+		{
+			currentLocation = 2;
+			LoadMapDataFromFile("surfLoc2.txt", "obstLoc2.txt");
+			LoadSurfaceElements(ren, surfElements);
+			LoadObstacleElements(ren, obstElements);
+			player.position.x = 50;
+		}
 	}
-
-	if (location2 = true && (player.position.y >= 200 && player.position.x <= 0 && player.position.y <= 400))
+	else if (currentLocation == 2) 
 	{
-		location2 = false;
-		LoadMapDataFromFile("surfLoc1.txt", "obstLoc1.txt");
-		location1 = true;
+		if ((player.position.y >= 250 - (player.position.h / 2)) && (player.position.x <= 0 - (player.position.w / 2)) && (player.position.y <= 400 - (player.position.h-15)))
+		{
+			currentLocation = 1;
+			LoadMapDataFromFile("surfLoc1.txt", "obstLoc1.txt");
+			LoadSurfaceElements(ren, surfElements);
+			LoadObstacleElements(ren, obstElements);
+			player.position.x = 900;
+		}
+		else if ((player.position.y >= 50 - (player.position.h / 2)) && (player.position.x >= WINDOW_WIDTH - (player.position.w / 2)) && (player.position.y <= 400 + (player.position.h - 15)))
+		{
+			currentLocation = 3;
+			LoadMapDataFromFile("surfLoc3.txt", "obstLoc3.txt");
+			LoadSurfaceElements(ren, surfElements);
+			LoadObstacleElements(ren, obstElements);
+			player.position.x = 50;
+		}
 	}
-
-	if (location2 = true && (player.position.y >= 50 && player.position.x >= 1000 && player.position.y <= 550))
+	else if (currentLocation == 3)
 	{
-		location2 = false;
-		LoadMapDataFromFile("surfLoc3.txt", "obstLoc3.txt");
-		location3 = true;
-	}
-
-	if (location3 = true && (player.position.y >= 50 && player.position.x <= 0 && player.position.y <= 550))
-	{
-		location3 = false;
-		LoadMapDataFromFile("surfLoc2.txt", "obstLoc2.txt");
-		location2 = true;
+		if ((player.position.y >= 50 - (player.position.h / 2)) && (player.position.x <= 0 - (player.position.w / 2)) && (player.position.y <= 400 + (player.position.h - 15)))
+		{
+			currentLocation = 2;
+			LoadMapDataFromFile("surfLoc2.txt", "obstLoc2.txt");
+			LoadSurfaceElements(ren, surfElements);
+			LoadObstacleElements(ren, obstElements);
+			player.position.x = 900;
+		}
 	}
 }
+
 
 void Game(SDL_Renderer* ren)
 {
 	bool isRunning = true;
-	bool location1 = true;
-	bool location2 = false;
-	bool location3 = false;
+	int currentLocation = 1;
 
 	// Загрузка данных карты из файла
 	LoadMapDataFromFile("surfLoc1.txt", "obstLoc1.txt");
@@ -231,21 +244,17 @@ void Game(SDL_Renderer* ren)
 					break;
 				case SDL_SCANCODE_W:
 					isUpPressed = true;
-					CheckLocation(player, location1, location2, location3);
 					break;
 				case SDL_SCANCODE_S:
 					isDownPressed = true;
-					CheckLocation(player, location1, location2, location3);
 					break;
 				case SDL_SCANCODE_D:
 					isRightPressed = true;
 					player.direction = DIR_RIGHT;
-					CheckLocation(player, location1, location2, location3);
 					break;
 				case SDL_SCANCODE_A:
 					isLeftPressed = true;
 					player.direction = DIR_LEFT;
-					CheckLocation(player, location1, location2, location3);
 					break;
 				}
 				break;
@@ -272,7 +281,7 @@ void Game(SDL_Renderer* ren)
 
         // Обновление игрока
         UpdatePlayer(&player, isUpPressed, isDownPressed, isLeftPressed, isRightPressed);
-
+		CheckLocation(player, ren, surfElements, obstElements, currentLocation);
 
         // Очистка экрана
         SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
