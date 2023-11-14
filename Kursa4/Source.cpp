@@ -5,13 +5,6 @@
 #include <math.h>
 #include "Game.h"
 
-//- управление(движение +, клавиши оружие +, клавиша для хилла(на 4), пробел для стрельбы)
-//- главное меню(start, about, exit)
-//- минимум 3 типа оружия(нож, пистолет, граната)
-//- минимум 2 типа противников(пистолет, камикадзе)
-//- загрузка карты с файла
-//- минимум 3 локации
-//- простейшие выпадающие бонусы из противников(здоровье, деньги и тд.)
 
 SDL_Window* win = NULL;
 SDL_Renderer* ren = NULL;
@@ -41,7 +34,7 @@ int main(int argc, char* argv[])
 	SDL_RenderClear(ren);
 	SDL_SetRenderDrawBlendMode(ren, SDL_BLENDMODE_BLEND);
 
-	Game(ren);
+	Menu(ren);
 
 	DeInit(0, &win, &ren, &win_surface);
 
