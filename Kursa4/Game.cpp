@@ -239,6 +239,54 @@ bool PointInRect(int x, int y, const SDL_Rect& rect)
 }
 
 
+//void CollisionWithBullet(Player& player, Bullet& bullet, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
+//{
+//	for (int i = 0; i < MAX_ENEMY; i++)
+//		for (int k = 0; k < bullet.count; k++)
+//			if (bullet.active_bullet[k] == 1)
+//				if (bullet.bullet_mas[k].y <= enemy[i].position.y + enemy[i].position.h && bullet.bullet_mas[k].y + bullet.size_y >= enemy[i].position.y)
+//					if (bullet.bullet_mas[k].x <= enemy[i].position.x + enemy[i].position.w && bullet.bullet_mas[k].x + bullet.size_x >= enemy[i].position.x)
+//					{
+//						enemy[i].hp -= bullet.dmg;
+//						if (enemy[i].hp <= 0)
+//						{
+//							int bonusIndex = -1;  // Переменная для хранения индекса созданного бонуса
+//							for (int j = 0; j < MAX_ENEMY; j++)
+//							{
+//								if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+//								{
+//									int chance = rand() % 10 + 1;
+//									printf("Chance: %d\n", chance);
+//									if (chance <= 10)
+//									{
+//										int typeChance = rand() % 10 + 1;
+//										if (typeChance <= 1)
+//										{
+//											bonus[j].Bontype = Heart;
+//											bonusIndex = j;
+//										}
+//										else {
+//											bonus[j].Bontype = Money;
+//											bonusIndex = j + 5;
+//										}
+//										printf("tchance: %d\n", typeChance);
+//									}
+//								}
+//							}
+//
+//							if (bonusIndex != -1)
+//							{
+//								bonus[bonusIndex].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+//								bonus[bonusIndex].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+//							}
+//
+//							enemy[i].position.y = WINDOW_HEIGHT + 1;
+//						}
+//
+//						bullet.active_bullet[k] = 0;
+//					}
+//}
+
 void CollisionWithBullet(Player& player, Bullet& bullet, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
 {
 	for (int i = 0; i < MAX_ENEMY; i++)
@@ -250,41 +298,44 @@ void CollisionWithBullet(Player& player, Bullet& bullet, Enemy enemy[], Bonus bo
 						enemy[i].hp -= bullet.dmg;
 						if (enemy[i].hp <= 0)
 						{
-							for (int j = 0; j < MAX_BONUS; j++)
-								if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+							int chance = rand() % 10 + 1;
+							printf("Chance: %d\n", chance);
+
+							// Логика для создания сердец
+							if (chance <= 5)
+							{
+								for (int j = 0; j < (MAX_BONUS/2); j++)
 								{
-									int chance = rand() % 10 + 1;
-									printf("Chance: %d\n", chance);
-									if (chance <= 10)
+									if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
 									{
-										int typeChance = rand() % 10 + 1;
-										if (typeChance <= 2)
-										{
-											bonus[j].Bontype = Heart;
-										}
-										else {
-											bonus[j].Bontype = Money;
-										}
-										printf("tchance: %d\n", typeChance);
-										if (bonus[j].Bontype == Heart)
-										{
-											bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-											bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
-										}
-										else
-										{
-											bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-											bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
-										}
+										bonus[j].Bontype = Heart;
+										bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+										bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
 										break;
 									}
-									break;
 								}
+							}
+							// Логика для создания монет
+							else if (chance > 5)
+							{
+								for (int j = (MAX_BONUS / 2); j < MAX_BONUS; j++)
+								{
+									if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+									{
+										bonus[j].Bontype = Money;
+										bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+										bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+										break;
+									}
+								}
+							}
 							enemy[i].position.y = WINDOW_HEIGHT + 1;
 						}
+
 						bullet.active_bullet[k] = 0;
 					}
 }
+
 
 void CollisionWithGrenade(Player& player, Grenade& grenade, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
 {
@@ -297,36 +348,37 @@ void CollisionWithGrenade(Player& player, Grenade& grenade, Enemy enemy[], Bonus
 						// добавить еще домаг от взрыва
 						if (enemy[i].hp <= 0)
 						{
-							for (int j = 0; j < MAX_BONUS; j++)
-								if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+							int chance = rand() % 10 + 1;
+							printf("Chance: %d\n", chance);
+
+							// Логика для создания сердец
+							if (chance <= 5)
+							{
+								for (int j = 0; j < (MAX_BONUS / 2); j++)
 								{
-									int chance = rand() % 10 + 1;
-									printf("Chance: %d\n", chance);
-									if (chance <= 5)
+									if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
 									{
-										int typeChance = rand() % 10 + 1;
-										if (typeChance <= 5)
-										{
-											bonus[j].Bontype = Heart;
-										}
-										else {
-											bonus[j].Bontype = Money;
-										}
-										printf("tchance: %d\n", typeChance);
-										if (bonus[j].Bontype == Heart)
-										{
-											bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-											bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
-										}
-										else
-										{
-											bonus[j + 5].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-											bonus[j + 5].position.y = enemy[i].position.y + enemy[i].position.h / 2;
-										}
+										bonus[j].Bontype = Heart;
+										bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+										bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
 										break;
 									}
-									break;
 								}
+							}
+							// Логика для создания монет
+							else if (chance > 5)
+							{
+								for (int j = (MAX_BONUS / 2); j < MAX_BONUS; j++)
+								{
+									if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+									{
+										bonus[j].Bontype = Money;
+										bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+										bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+										break;
+									}
+								}
+							}
 							enemy[i].position.y = WINDOW_HEIGHT + 1;
 						}
 						grenade.is_Moving[k] = 0;
@@ -374,36 +426,37 @@ void CollisionWithKnife(Player& player, Enemy enemy[], Bonus bonus[], SDL_Render
 			enemy[i].hp -= player.currentWeapon.damage;
 			if (enemy[i].hp <= 0)
 			{
-				for (int j = 0; j < MAX_BONUS; j++)
-					if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+				int chance = rand() % 10 + 1;
+				printf("Chance: %d\n", chance);
+
+				// Логика для создания сердец
+				if (chance <= 5)
+				{
+					for (int j = 0; j < (MAX_BONUS / 2); j++)
 					{
-						int chance = rand() % 10 + 1;
-						printf("chance: %d\n", chance);
-						if (chance <= 5)
+						if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
 						{
-							int typeChance = rand() % 10 + 1;
-							if (typeChance <= 5)
-							{
-								bonus[j].Bontype = Heart;
-							}
-							else {
-								bonus[j].Bontype = Money;
-							}
-							printf("typechance: %d\n", typeChance);
-							if (bonus[j].Bontype == Heart)
-							{
-								bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-								bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
-							}
-							else
-							{
-								bonus[j + (MAX_BONUS/2)].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-								bonus[j + (MAX_BONUS/2)].position.y = enemy[i].position.y + enemy[i].position.h / 2;
-							}
+							bonus[j].Bontype = Heart;
+							bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+							bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
 							break;
 						}
-						break;
 					}
+				}
+				// Логика для создания монет
+				else if (chance > 5)
+				{
+					for (int j = (MAX_BONUS / 2); j < MAX_BONUS; j++)
+					{
+						if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+						{
+							bonus[j].Bontype = Money;
+							bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+							bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+							break;
+						}
+					}
+				}
 				enemy[i].position.y = WINDOW_HEIGHT + 1;
 			}
 			break;
@@ -616,9 +669,9 @@ void Game(SDL_Renderer* ren)
 	Bonus bonus[MAX_BONUS];
 
 	for (int i = 0; i < (MAX_BONUS/2); i++)
-		InitializeBonus(&bonus[i], ren, "heart.png", 100, 100);
+		InitializeBonus(&bonus[i], ren, "heart.png", 0, WINDOW_HEIGHT +1);
 	for (int i = (MAX_BONUS/2); i < MAX_BONUS; i++)
-		InitializeBonus(&bonus[i], ren, "money.png", 100, 100);
+		InitializeBonus(&bonus[i], ren, "money.png", 0, WINDOW_HEIGHT+1);
 
 	bool isUpPressed = false;
 	bool isDownPressed = false;
@@ -685,17 +738,24 @@ void Game(SDL_Renderer* ren)
 				case SDL_SCANCODE_1:
 					player.currentWeapon.name = "Knife";
 					player.currentWeapon.damage = 10;
-					InitializePlayer(&player, ren, "HEISENBERGKnife1.png", player.position.x, player.position.y);
+					SDL_Rect oldRect_K = player.position;  // Сохраняем текущий SDL_Rect
+					SDL_DestroyTexture(player.texture);
+					player.texture = loadTextureFromFile("HEISENBERGKnife1.png", &oldRect_K, ren);
+				//	InitializePlayer(&player, ren, "HEISENBERGKnife1.png", player.position.x, player.position.y);
 					break;
 				case SDL_SCANCODE_2:
 					player.currentWeapon.name = "Pistol";
 					player.currentWeapon.damage = 20;
-					InitializePlayer(&player, ren, "HEISENBERGPistol1.png", player.position.x, player.position.y);
+					SDL_Rect oldRect_P = player.position;  // Сохраняем текущий SDL_Rect
+					SDL_DestroyTexture(player.texture);
+					player.texture = loadTextureFromFile("HEISENBERGPistol1.png", &oldRect_P, ren);
 					break;
 				case SDL_SCANCODE_3:
 					player.currentWeapon.name = "Grenade";
 					player.currentWeapon.damage = 30;
-					InitializePlayer(&player, ren, "HEISENBERGGrenade1.png", player.position.x, player.position.y);
+					SDL_Rect oldRect_G = player.position;  // Сохраняем текущий SDL_Rect
+					SDL_DestroyTexture(player.texture);
+					player.texture = loadTextureFromFile("HEISENBERGGrenade1.png", &oldRect_G, ren);
 					break;
 				case SDL_SCANCODE_SPACE:
 					if (player.currentWeapon.name == "Knife")
