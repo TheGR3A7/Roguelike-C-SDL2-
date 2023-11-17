@@ -6,7 +6,8 @@
 
 const int MAP_WIDTH = 20;
 const int MAP_HEIGHT = 12;
-const int TILE_SIZE = 50;
+extern double TILE_SIZE_W;
+extern double TILE_SIZE_H;
 
 struct MapElement {
     char symbol;

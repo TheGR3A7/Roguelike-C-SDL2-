@@ -7,6 +7,8 @@
 #include "func.h"
 
 
+double TILE_SIZE_W = 50;
+double TILE_SIZE_H = 50;
 
 
 char surfData[MAP_HEIGHT][MAP_WIDTH];
@@ -86,10 +88,10 @@ void LoadSurfaceElements(SDL_Renderer* ren, MapElement surfElements[MAP_HEIGHT][
 			else if (symbol == '"') {
 				surfElements[i][j].texture = loadTextureFromFile("sidewalk.png", &(surfElements[i][j].position), ren);
 			}
-			surfElements[i][j].position.x = j * TILE_SIZE;
-			surfElements[i][j].position.y = i * TILE_SIZE;
-			surfElements[i][j].position.w = TILE_SIZE;
-			surfElements[i][j].position.h = TILE_SIZE;
+			surfElements[i][j].position.x = j * TILE_SIZE_W;
+			surfElements[i][j].position.y = i * TILE_SIZE_H;
+			surfElements[i][j].position.w = TILE_SIZE_W;
+			surfElements[i][j].position.h = TILE_SIZE_H;
 			surfElements[i][j].symbol = symbol;
 		}
 	}
@@ -121,10 +123,10 @@ void LoadObstacleElements(SDL_Renderer* ren, MapElement obstElements[MAP_HEIGHT]
 			else if (symbol == ' ') {
 				obstElements[i][j].texture = nullptr;
 			}
-			obstElements[i][j].position.x = j * TILE_SIZE;
-			obstElements[i][j].position.y = i * TILE_SIZE;
-			obstElements[i][j].position.w = TILE_SIZE;
-			obstElements[i][j].position.h = TILE_SIZE;
+			obstElements[i][j].position.x = j * TILE_SIZE_W;
+			obstElements[i][j].position.y = i * TILE_SIZE_H;
+			obstElements[i][j].position.w = TILE_SIZE_W;
+			obstElements[i][j].position.h = TILE_SIZE_H;
 			obstElements[i][j].symbol = symbol;
 		}
 	}

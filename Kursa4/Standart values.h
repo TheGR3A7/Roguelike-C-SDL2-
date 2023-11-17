@@ -1,8 +1,10 @@
 #pragma once
 
-#define WINDOW_HEIGHT 600
-#define WINDOW_WIDTH 1000
 #define FPS 120
 #define DIR_RIGHT 1
 #define DIR_LEFT 2
-#define KNIFE_ATTACK_RADIUS 100
+
+extern double WINDOW_HEIGHT;
+extern double WINDOW_WIDTH;
+extern double dtWIN_H;
+extern double dtWIN_W;

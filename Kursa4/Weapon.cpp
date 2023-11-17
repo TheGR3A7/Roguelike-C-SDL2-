@@ -4,18 +4,15 @@
 #include "Weapon.h"
 #include "func.h"
 #include "Player.h"
-#include "Standart values.h"
+
 
 void InitializeWeapons(Weapon weapons[], int numWeapons)
 {
     weapons[0].name = "Knife";
-    weapons[0].damage = 10;
 
     weapons[1].name = "Pistol";
-    weapons[1].damage = 20;
 
     weapons[2].name = "Grenade";
-    weapons[2].damage = 50;
 }
 
 
@@ -36,7 +33,7 @@ void CreateBullet(Bullet& bullet, Player& player, SDL_Renderer* ren)
 
         for (int i = 0; i < bullet.count; i++)
         {
-            bullet.bullet_mas[i] = { 0, WINDOW_HEIGHT + bullet.size_y + 1, 0, 0 };
+            bullet.bullet_mas[i] = { 0,(int) WINDOW_HEIGHT + bullet.size_y + 1, 0, 0 };
         }
 
         bullet.is_NULL = true;
@@ -67,5 +64,56 @@ void BulletDraw(Bullet bullet, SDL_Renderer* ren)
             else
                 flip = SDL_FLIP_NONE;
             SDL_RenderCopyEx(ren, bullet.texture, NULL, &bullet.bullet_mas[i], 0, NULL, flip);
+        }
+}
+
+void CreateGrenade(Grenade& grenade, Player& player, SDL_Renderer* ren)
+{
+    if (grenade.texture == nullptr)
+    {
+        grenade.texture = loadTextureFromFile("grenade.png", &grenade.rect, ren);
+    }
+
+    grenade.size_x = 25;
+    grenade.size_y = 25;
+    grenade.dmg = 30;
+    grenade.cd = 800;
+    grenade.vy = 300;
+    grenade.vx = 300;
+    grenade.count = MAX_GRENADE;
+
+    for (int i = 0; i < grenade.count; i++)
+    {
+        grenade.grenade_mas[i] = { 0,(int)WINDOW_HEIGHT + grenade.size_y + 1, 0, 0 };
+        grenade.is_Moving[i] = true;
+    }
+    grenade.is_NULL = true;
+}
+
+bool CheckCooldownGrenade(Grenade& grenade, int dt)
+{
+    grenade.cur_time += dt;
+    if (grenade.cur_time >= grenade.cd)
+    {
+        grenade.cur_time -= grenade.cd;
+        return false;
+    }
+    return true;
+}
+
+void GrenadeDraw(Grenade grenade, SDL_Renderer* ren)
+{
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+
+    for (int i = 0; i < grenade.count; i++)
+        if (grenade.active_grenade[i] == 1)
+        {
+            if (grenade.grenadeDirection[i] == DIR_LEFT)
+            {
+                flip = SDL_FLIP_HORIZONTAL;
+            }
+            else
+                flip = SDL_FLIP_NONE;
+            SDL_RenderCopyEx(ren, grenade.texture, NULL, &grenade.grenade_mas[i], 0, NULL, flip);
         }
 }

@@ -3,7 +3,8 @@
 #include "func.h"
 #include "Standart values.h"
 
-const int MAX_BULLETS = 50;
+const int MAX_BULLETS = 100;
+const int MAX_GRENADE = 50;
 
 struct Player;
 
@@ -15,11 +16,23 @@ struct Weapon {
 struct Bullet {
     int size_x, size_y, dmg, cd, cur_time = 0, count;
     double pos_x, pos_y, vx, vy;
-    SDL_Rect bullet_mas[50];
+    SDL_Rect bullet_mas[MAX_BULLETS];
     int bulletDirection[MAX_BULLETS];
-    int active_bullet[50] = { 0 };
+    int active_bullet[MAX_BULLETS] = { 0 };
     SDL_Rect rect = { 0, 0, 0, 0 };
     SDL_Texture* texture = nullptr;
+    bool is_NULL;
+};
+
+struct Grenade {
+    int size_x, size_y, dmg, cd, cur_time = 0, count;
+    double pos_x, pos_y, vx, vy;
+    SDL_Rect grenade_mas[MAX_GRENADE];
+    int grenadeDirection[MAX_GRENADE];
+    int active_grenade[MAX_GRENADE] = { 0 };
+    SDL_Rect rect = { 0, 0, 0, 0 };
+    SDL_Texture* texture = nullptr;
+    int is_Moving[MAX_GRENADE];
     bool is_NULL;
 };
 
@@ -39,3 +52,6 @@ struct Enemy_Bullet
 bool CheckCooldown(Bullet& bullet, int dt);
 void CreateBullet(Bullet& bullet, Player& player, SDL_Renderer* ren);
 void BulletDraw(Bullet bullet, SDL_Renderer* ren);
+void CreateGrenade(Grenade& grenade, Player& player, SDL_Renderer* ren);
+bool CheckCooldownGrenade(Grenade& grenade, int dt);
+void GrenadeDraw(Grenade grenade, SDL_Renderer* ren);

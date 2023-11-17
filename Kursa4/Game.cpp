@@ -3,10 +3,14 @@
 #include <SDL_Image.h>
 #include <SDL_ttf.h>
 #include <iostream>
+#include <random>
 #include "Game.h"
 #include "func.h"
 #include "Map.h"
+#pragma comment (lib, "winmm.lib")
+#include <Windows.h>
 
+bool isMusicPlaying = false;
 
 void About(SDL_Renderer* ren)
 {
@@ -42,8 +46,12 @@ void About(SDL_Renderer* ren)
 			case SDL_WINDOWEVENT:
 				if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 				{
-					//WINDOW_WIDTH = event.window.data1;
-					//WINDOW_HEIGHT = event.window.data2;
+					dtWIN_W = (double)event.window.data1 / (double)WINDOW_WIDTH;
+					dtWIN_H = (double)event.window.data2 / (double)WINDOW_HEIGHT;
+					TILE_SIZE_W *= dtWIN_W;
+					TILE_SIZE_H *= dtWIN_H;
+					WINDOW_WIDTH = event.window.data1;
+					WINDOW_HEIGHT = event.window.data2;
 				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
@@ -99,6 +107,12 @@ void About(SDL_Renderer* ren)
 
 void Menu(SDL_Renderer* ren)
 {
+	if (!isMusicPlaying)
+	{
+		PlaySound(L"MenuTheme.wav", NULL, SND_ASYNC | SND_LOOP);
+		isMusicPlaying = true;
+	}
+
 	SDL_Rect Main_Menu_rect;
 	SDL_Texture* main_menu = loadTextureFromFile("Menu.jpg", &Main_Menu_rect, ren);
 
@@ -137,8 +151,12 @@ void Menu(SDL_Renderer* ren)
 			case SDL_WINDOWEVENT:
 				if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 				{
-					//WINDOW_WIDTH = event.window.data1;
-					//WINDOW_HEIGHT = event.window.data2;
+					dtWIN_W = (double)event.window.data1 / (double)WINDOW_WIDTH;
+					dtWIN_H = (double)event.window.data2 / (double)WINDOW_HEIGHT;
+					TILE_SIZE_W *= dtWIN_W;
+					TILE_SIZE_H *= dtWIN_H;
+					WINDOW_WIDTH = event.window.data1;
+					WINDOW_HEIGHT = event.window.data2;
 				}
 				break;
 			case SDL_MOUSEBUTTONDOWN:
@@ -147,6 +165,8 @@ void Menu(SDL_Renderer* ren)
 				if (PointInRect(mouseX, mouseY, Play_rect))
 				{
 					playButtonNormalColor = playButtonPressedColor;
+					isMusicPlaying = false;
+					PlaySound(NULL, NULL, 0);  // Остановить звук
 					Game(ren);
 					return;
 				}
@@ -159,7 +179,7 @@ void Menu(SDL_Renderer* ren)
 				else if (PointInRect(mouseX, mouseY, Exit_rect))
 				{
 					exitButtonNormalColor = exitButtonPressedColor;
-					return;
+					exit(1);
 				}
 				break;
 			case SDL_MOUSEMOTION:
@@ -218,47 +238,181 @@ bool PointInRect(int x, int y, const SDL_Rect& rect)
 	return x >= rect.x && x <= rect.x + rect.w && y >= rect.y && y <= rect.y + rect.h;
 }
 
+
 void CollisionWithBullet(Player& player, Bullet& bullet, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
 {
-	for (int i = 0; i < 2; i++)
-			for (int k = 0; k < bullet.count; k++)
-				if (bullet.active_bullet[k] == 1)
-					if (bullet.bullet_mas[k].y <= enemy[i].position.y + enemy[i].position.h && bullet.bullet_mas[k].y + bullet.size_y >= enemy[i].position.y)
-						if (bullet.bullet_mas[k].x <= enemy[i].position.x + enemy[i].position.w && bullet.bullet_mas[k].x + bullet.size_x >= enemy[i].position.x)
+	for (int i = 0; i < MAX_ENEMY; i++)
+		for (int k = 0; k < bullet.count; k++)
+			if (bullet.active_bullet[k] == 1)
+				if (bullet.bullet_mas[k].y <= enemy[i].position.y + enemy[i].position.h && bullet.bullet_mas[k].y + bullet.size_y >= enemy[i].position.y)
+					if (bullet.bullet_mas[k].x <= enemy[i].position.x + enemy[i].position.w && bullet.bullet_mas[k].x + bullet.size_x >= enemy[i].position.x)
+					{
+						enemy[i].hp -= bullet.dmg;
+						if (enemy[i].hp <= 0)
 						{
-							enemy[i].hp -= bullet.dmg;
-							if (enemy[i].hp <= 0)
-							{
-								for (int j = 0; j < 5; j++)
-									if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+							for (int j = 0; j < MAX_BONUS; j++)
+								if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+								{
+									int chance = rand() % 10 + 1;
+									printf("Chance: %d\n", chance);
+									if (chance <= 10)
 									{
-										bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-										bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+										int typeChance = rand() % 10 + 1;
+										if (typeChance <= 2)
+										{
+											bonus[j].Bontype = Heart;
+										}
+										else {
+											bonus[j].Bontype = Money;
+										}
+										printf("tchance: %d\n", typeChance);
+										if (bonus[j].Bontype == Heart)
+										{
+											bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+											bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+										}
+										else
+										{
+											bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+											bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+										}
 										break;
 									}
-								enemy[i].position.y = WINDOW_HEIGHT + 1;
-							}
-							bullet.active_bullet[k] = 0;
+									break;
+								}
+							enemy[i].position.y = WINDOW_HEIGHT + 1;
 						}
+						bullet.active_bullet[k] = 0;
+					}
+}
+
+void CollisionWithGrenade(Player& player, Grenade& grenade, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
+{
+	for (int i = 0; i < MAX_ENEMY; i++)
+		for (int k = 0; k < grenade.count; k++)
+			if (grenade.active_grenade[k] == 1)
+				if (grenade.grenade_mas[k].y <= enemy[i].position.y + enemy[i].position.h && grenade.grenade_mas[k].y + grenade.size_y >= enemy[i].position.y)
+					if (grenade.grenade_mas[k].x <= enemy[i].position.x + enemy[i].position.w && grenade.grenade_mas[k].x + grenade.size_x >= enemy[i].position.x)
+					{
+						// добавить еще домаг от взрыва
+						if (enemy[i].hp <= 0)
+						{
+							for (int j = 0; j < MAX_BONUS; j++)
+								if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+								{
+									int chance = rand() % 10 + 1;
+									printf("Chance: %d\n", chance);
+									if (chance <= 5)
+									{
+										int typeChance = rand() % 10 + 1;
+										if (typeChance <= 5)
+										{
+											bonus[j].Bontype = Heart;
+										}
+										else {
+											bonus[j].Bontype = Money;
+										}
+										printf("tchance: %d\n", typeChance);
+										if (bonus[j].Bontype == Heart)
+										{
+											bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+											bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+										}
+										else
+										{
+											bonus[j + 5].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+											bonus[j + 5].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+										}
+										break;
+									}
+									break;
+								}
+							enemy[i].position.y = WINDOW_HEIGHT + 1;
+						}
+						grenade.is_Moving[k] = 0;
+						//	grenade.active_grenade[k] = 0;
+					}
 }
 
 void CollisionWithBonus(Player& player, Bonus bonus[])
 {
-	for (int i = 0; i < 5; i++)
+	for (int i = 0; i < MAX_BONUS; i++)
 	if (player.position.y <= bonus[i].position.y + bonus[i].position.h && player.position.y + player.position.h >= bonus[i].position.y)
 		if (player.position.x <= bonus[i].position.x + bonus[i].position.w && player.position.x + player.position.w >= bonus[i].position.x)
 		{
-			if (player.hp + 25 <= player.maxhp)
-				player.hp += 25;
-			else
-				player.hp = player.maxhp;
-			if (player.money + 25 <= player.maxmoney)
-				player.money += 25;
-			else
-				player.money = player.maxmoney;
+			switch (bonus[i].Bontype)
+			{
+			case Heart:
+				if (player.hp + 25 <= player.maxhp)
+					player.hp += 25;
+				else
+					player.hp = player.maxhp;
+				break;
+			case Money:
+				if (player.money + 25 <= player.maxmoney)
+					player.money += 25;
+				else
+					player.money = player.maxmoney;
+				break;
+			}
 			bonus[i].position.x = 0;
 			bonus[i].position.y = WINDOW_HEIGHT + 1;
 		}
+}
+
+
+void CollisionWithKnife(Player& player, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
+{
+	bool collision = false;
+	for (int i = 0; i < MAX_ENEMY; i++)
+	{
+		SDL_Rect enemies = { enemy[i].position.x -5,enemy[i].position.y, enemy[i].position.w + 10, enemy[i].position.h };
+
+ 		if (SDL_HasIntersection(&player.position, &enemies))
+		{
+			collision = true;
+			enemy[i].hp -= player.currentWeapon.damage;
+			if (enemy[i].hp <= 0)
+			{
+				for (int j = 0; j < MAX_BONUS; j++)
+					if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
+					{
+						int chance = rand() % 10 + 1;
+						printf("chance: %d\n", chance);
+						if (chance <= 5)
+						{
+							int typeChance = rand() % 10 + 1;
+							if (typeChance <= 5)
+							{
+								bonus[j].Bontype = Heart;
+							}
+							else {
+								bonus[j].Bontype = Money;
+							}
+							printf("typechance: %d\n", typeChance);
+							if (bonus[j].Bontype == Heart)
+							{
+								bonus[j].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+								bonus[j].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+							}
+							else
+							{
+								bonus[j + (MAX_BONUS/2)].position.x = enemy[i].position.x + enemy[i].position.w / 2;
+								bonus[j + (MAX_BONUS/2)].position.y = enemy[i].position.y + enemy[i].position.h / 2;
+							}
+							break;
+						}
+						break;
+					}
+				enemy[i].position.y = WINDOW_HEIGHT + 1;
+			}
+			break;
+		}
+		if (collision)
+		{
+			break;
+		}
+	}
 }
 
 void RenderGameText(TTF_Font* font, Player* player, SDL_Renderer* ren)
@@ -367,8 +521,12 @@ void DeadWallpaper(Player*player, SDL_Renderer* ren)
 				case SDL_WINDOWEVENT:
 					if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 					{
-						//WINDOW_WIDTH = event.window.data1;
-						//WINDOW_HEIGHT = event.window.data2;
+						dtWIN_W = (double)event.window.data1 / (double)WINDOW_WIDTH;
+						dtWIN_H = (double)event.window.data2 / (double)WINDOW_HEIGHT;
+						TILE_SIZE_W *= dtWIN_W;
+						TILE_SIZE_H *= dtWIN_H;
+						WINDOW_WIDTH = event.window.data1;
+						WINDOW_HEIGHT = event.window.data2;
 					}
 					break;
 				case SDL_MOUSEBUTTONDOWN:
@@ -421,10 +579,13 @@ void DeadWallpaper(Player*player, SDL_Renderer* ren)
 
 void Game(SDL_Renderer* ren)
 {
+	srand(time(NULL));
+
 	TTF_Font* font = TTF_OpenFont("fonts\\impact.ttf", 75);
 
 	bool isRunning = true;
 	bool is_cooldown = true;
+	bool is_cooldown_g = true;
 	int currentLocation = 1;
 
 	// Загрузка данных карты из файла
@@ -441,28 +602,23 @@ void Game(SDL_Renderer* ren)
     Player player;
     InitializePlayer(&player, ren, "HEISENBERG1.png", 100, 100);
 
-	Enemy enemy[2];
+	Enemy enemy[MAX_ENEMY];
 
-	Enemy hector;
-	InitializeEnemy(&enemy[0], ren, "HECTOR1.png", 400, 200);
+	InitializeEnemy(enemy, &player, ren, "HECTOR1.png", "TUCO1.png", 400, 200, obstElements);
 
-	Enemy tuco;
-	InitializeEnemy(&enemy[1], ren, "TUCO1.png", 300, 300);
 
 	Bullet bullet;
 	CreateBullet(bullet, player, ren);
 
-	Bonus bonus[5];
-	for(int i = 0; i<5; i++)
-		InitializeBonus(&bonus[i], ren, "heart.png", 0, WINDOW_HEIGHT + 1);
+	Grenade grenade;
+	CreateGrenade(grenade, player, ren);
 
-	//Bonus bonusHP[5];
-	//for(int i = 0; i<5; i++)
-	//	InitializeBonus(&bonusHP[i], ren, "heart.png", 0, WINDOW_HEIGHT + 1);
-	//Bonus bonusMON[5];
-	//for (int i = 0; i < 5; i++)
-	//	InitializeBonus(&bonusMON[i], ren, "money.png", 0, WINDOW_HEIGHT + 1);
-	
+	Bonus bonus[MAX_BONUS];
+
+	for (int i = 0; i < (MAX_BONUS/2); i++)
+		InitializeBonus(&bonus[i], ren, "heart.png", 100, 100);
+	for (int i = (MAX_BONUS/2); i < MAX_BONUS; i++)
+		InitializeBonus(&bonus[i], ren, "money.png", 100, 100);
 
 	bool isUpPressed = false;
 	bool isDownPressed = false;
@@ -474,6 +630,9 @@ void Game(SDL_Renderer* ren)
 
 		if (!CheckCooldown(bullet, 16))
 			is_cooldown = false;
+
+		if (!CheckCooldownGrenade(grenade, 16))
+			is_cooldown_g = false;
 
         SDL_Event ev;
 		while (SDL_PollEvent(&ev))
@@ -487,11 +646,35 @@ void Game(SDL_Renderer* ren)
 			case SDL_WINDOWEVENT:
 				if (ev.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
 				{
-					//WINDOW_WIDTH = ev.window.data1;
-					//WINDOW_HEIGHT = ev.window.data2;
+					dtWIN_W = (double)ev.window.data1 / (double)WINDOW_WIDTH;
+					dtWIN_H = (double)ev.window.data2 / (double)WINDOW_HEIGHT;
+					TILE_SIZE_W *= dtWIN_W;
+					TILE_SIZE_H *= dtWIN_H;
+					WINDOW_WIDTH = ev.window.data1;
+					WINDOW_HEIGHT = ev.window.data2;
+
+					for (int i = 0; i < MAP_HEIGHT; i++)
+					{
+						for (int j = 0; j < MAP_WIDTH; j++)
+						{
+							surfElements[i][j].position.x *= dtWIN_W;
+							surfElements[i][j].position.y *= dtWIN_H;
+							surfElements[i][j].position.w *= dtWIN_W;
+							surfElements[i][j].position.h *= dtWIN_H;
+						}
+					}
+
+					for (int i = 0; i < MAP_HEIGHT; i++)
+					{
+						for (int j = 0; j < MAP_WIDTH; j++)
+						{
+							obstElements[i][j].position.x *= dtWIN_W;
+							obstElements[i][j].position.y *= dtWIN_H;
+							obstElements[i][j].position.w *= dtWIN_W;
+							obstElements[i][j].position.h *= dtWIN_H;
+						}
+					}
 				}
-				break;
-				
 				break;
 			case SDL_KEYDOWN:
 				switch (ev.key.keysym.scancode)
@@ -501,17 +684,24 @@ void Game(SDL_Renderer* ren)
 					break;
 				case SDL_SCANCODE_1:
 					player.currentWeapon.name = "Knife";
+					player.currentWeapon.damage = 10;
 					InitializePlayer(&player, ren, "HEISENBERGKnife1.png", player.position.x, player.position.y);
 					break;
 				case SDL_SCANCODE_2:
 					player.currentWeapon.name = "Pistol";
+					player.currentWeapon.damage = 20;
 					InitializePlayer(&player, ren, "HEISENBERGPistol1.png", player.position.x, player.position.y);
 					break;
 				case SDL_SCANCODE_3:
 					player.currentWeapon.name = "Grenade";
+					player.currentWeapon.damage = 30;
 					InitializePlayer(&player, ren, "HEISENBERGGrenade1.png", player.position.x, player.position.y);
 					break;
 				case SDL_SCANCODE_SPACE:
+					if (player.currentWeapon.name == "Knife")
+					{
+						CollisionWithKnife(player, enemy, bonus, ren);
+					}
 					if (player.currentWeapon.name == "Pistol")
 					{
 						for (int i = 0; i < MAX_BULLETS; i++)
@@ -523,6 +713,18 @@ void Game(SDL_Renderer* ren)
 								break;
 							}
 						BulletSpawn(bullet, &player);
+					}
+					if (player.currentWeapon.name == "Grenade")
+					{
+						for (int i = 0; i < MAX_GRENADE; i++)
+							if (grenade.active_grenade[i] == 0 && !is_cooldown_g)
+							{
+								grenade.grenadeDirection[i] = player.direction;
+								grenade.active_grenade[i] = 1;
+								is_cooldown_g = true;
+								break;
+							}
+						GrenadeSpawn(grenade, &player);
 					}
 					break;
 				case SDL_SCANCODE_W:
@@ -566,8 +768,11 @@ void Game(SDL_Renderer* ren)
 		UpdatePlayer(&player, isUpPressed, isDownPressed, isLeftPressed, isRightPressed, obstElements, enemy);
 
 		BulletMovement(bullet, &player, 16);
+		GrenadeMovement(grenade, &player, 16);
 
-		CheckLocation(player, ren, surfElements, obstElements, currentLocation);
+		CheckBulletCollisionWithObstacle(bullet, obstElements);
+		CheckGrenadeCollisionWithObstacle(grenade, obstElements);
+		CheckLocation(player, enemy, bonus, ren, surfElements, obstElements, currentLocation);
 
         // Очистка экрана
         SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
@@ -586,21 +791,20 @@ void Game(SDL_Renderer* ren)
 
         // Отрисовка игрока, врагов и тд
 
-		for(int i = 0; i <5;i++)
-			RenderBonus(bonus[i], ren);
-		//for(int i = 0; i <5;i++)
-		//	RenderBonus(bonusHP[i], ren);
-		//for (int i = 0; i < 5; i++)
-		//	RenderBonus(bonusMON[i], ren);
 
 		RenderPlayer(&player, ren);
 
-		RenderEnemy(&enemy[0], ren);
-		RenderEnemy(&enemy[1], ren);
+		//RenderAllBonus(bonus, ren);
+
+		for(int i = 0; i < MAX_ENEMY; i++)
+			RenderEnemy(&enemy[i], ren);
 
 		CollisionWithBullet(player, bullet,enemy, bonus, ren);
+		CollisionWithGrenade(player, grenade, enemy, bonus, ren);
 		CollisionWithBonus(player, bonus);
 
+
+		GrenadeDraw(grenade, ren);
 		BulletDraw(bullet, ren);
 
 		RenderGameText(font, &player, ren);
@@ -610,6 +814,9 @@ void Game(SDL_Renderer* ren)
 			DeadWallpaper(&player, ren);
 			break; 
 		}
+
+		for(int i = 0; i <MAX_BONUS;i++)
+			RenderBonus(bonus[i], ren);
 
         // Обновление экрана
         SDL_RenderPresent(ren);
