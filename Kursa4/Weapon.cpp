@@ -39,6 +39,29 @@ void CreateBullet(Bullet& bullet, Player& player, SDL_Renderer* ren)
         bullet.is_NULL = true;
 }
 
+void CreateEnemyBullet(Enemy_Bullet& enemybullet, Enemy enemy[], SDL_Renderer* ren)
+{
+    if (enemybullet.texture == nullptr)
+    {
+        enemybullet.texture = loadTextureFromFile("BulletRed.png", &enemybullet.rect, ren);
+    }
+
+    enemybullet.size_x = 16;
+    enemybullet.size_y = 8;
+    enemybullet.dmg = 20;
+    enemybullet.cd = 1000;
+    enemybullet.vy = 300;
+    enemybullet.vx = 300;
+    enemybullet.count = MAX_ENEMYBULLETS;
+
+    for (int i = 0; i < enemybullet.count; i++)
+    {
+        enemybullet.bullet_mas[i] = { 0,(int)WINDOW_HEIGHT + enemybullet.size_y + 1, 0, 0 };
+    }
+
+    enemybullet.is_NULL = true;
+}
+
 bool CheckCooldown(Bullet& bullet, int dt)
 {
     bullet.cur_time += dt;
@@ -48,6 +71,23 @@ bool CheckCooldown(Bullet& bullet, int dt)
         return false;
     }
     return true;
+}
+
+void EnemyBulletDraw(Enemy_Bullet enemybullet, SDL_Renderer* ren)
+{
+    SDL_RendererFlip flip = SDL_FLIP_NONE;
+
+    for (int i = 0; i < enemybullet.count; i++)
+        if (enemybullet.active_bullet[i] == 1)
+        {
+            if (enemybullet.bulletDirection[i] == DIR_LEFT)
+            {
+                flip = SDL_FLIP_HORIZONTAL;
+            }
+            else
+                flip = SDL_FLIP_NONE;
+            SDL_RenderCopyEx(ren, enemybullet.texture, NULL, &enemybullet.bullet_mas[i], 0, NULL, flip);
+        }
 }
 
 void BulletDraw(Bullet bullet, SDL_Renderer* ren)

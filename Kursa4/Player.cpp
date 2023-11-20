@@ -68,7 +68,7 @@ void CheckCollision(Player* player, MapElement obstElements[MAP_HEIGHT][MAP_WIDT
         }
     }
 
-    // Проверка коллизий со всеми элементами препятствий
+    // Проверка коллизий со всеми врагами
     for (int i = 0; i < MAX_ENEMY; i++)
     {
             SDL_Rect enemies = enemy[i].position;
@@ -85,7 +85,7 @@ void CheckCollision(Player* player, MapElement obstElements[MAP_HEIGHT][MAP_WIDT
     }
 
 
-    // Если нет коллизий, обновите позицию игрока
+    // Если нет коллизий, обновляем позицию игрока
     if (!collision)
     {
         player->position = tempPosition;
@@ -94,7 +94,7 @@ void CheckCollision(Player* player, MapElement obstElements[MAP_HEIGHT][MAP_WIDT
 
 
 
-void CheckLocation(Player& player, Enemy* enemy, Bonus bonus[MAX_BONUS], SDL_Renderer* ren, MapElement surfElements[MAP_HEIGHT][MAP_WIDTH], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], int& currentLocation)
+void CheckLocation(Player& player, Enemy* enemy, Bonus bonus[MAX_BONUS], SDL_Renderer* ren, MapElement surfElements[MAP_HEIGHT][MAP_WIDTH], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], int& currentLocation, Bullet& bullet, Enemy_Bullet& enemybullet)
 {
     if (currentLocation == 1)
     {
@@ -110,6 +110,16 @@ void CheckLocation(Player& player, Enemy* enemy, Bonus bonus[MAX_BONUS], SDL_Ren
             {
                 bonus[i].position.x = 0;
                 bonus[i].position.y = WINDOW_HEIGHT + 1;
+            }
+            for (int i = 0; i < MAX_BULLETS; i++)
+            {
+                bullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + bullet.size_y + 1, 0, 0 };
+                bullet.active_bullet[i] = 0;
+            }
+            for (int i = 0; i < MAX_ENEMYBULLETS; i++)
+            {
+                enemybullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + enemybullet.size_y + 1, 0, 0 };
+                enemybullet.active_bullet[i] = 0;
             }
         }
     }
@@ -128,6 +138,16 @@ void CheckLocation(Player& player, Enemy* enemy, Bonus bonus[MAX_BONUS], SDL_Ren
                 bonus[i].position.x = 0;
                 bonus[i].position.y = WINDOW_HEIGHT + 1;
             }
+            for (int i = 0; i < MAX_BULLETS; i++)
+            {
+                bullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + bullet.size_y + 1, 0, 0 };
+                bullet.active_bullet[i] = 0;
+            }
+            for (int i = 0; i < MAX_ENEMYBULLETS; i++)
+            {
+                enemybullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + enemybullet.size_y + 1, 0, 0 };
+                enemybullet.active_bullet[i] = 0;
+            }
         }
         else if (player.position.y >= 50  && (player.position.x >= WINDOW_WIDTH - (player.position.w / 2)) && player.position.y <= 500 )
         {
@@ -141,6 +161,16 @@ void CheckLocation(Player& player, Enemy* enemy, Bonus bonus[MAX_BONUS], SDL_Ren
             {
                 bonus[i].position.x = 0;
                 bonus[i].position.y = WINDOW_HEIGHT + 1;
+            }
+            for (int i = 0; i < MAX_BULLETS; i++)
+            {
+                bullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + bullet.size_y + 1, 0, 0 };
+                bullet.active_bullet[i] = 0;
+            }
+            for (int i = 0; i < MAX_ENEMYBULLETS; i++)
+            {
+                enemybullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + enemybullet.size_y + 1, 0, 0 };
+                enemybullet.active_bullet[i] = 0;
             }
         }
     }
@@ -210,6 +240,30 @@ void BulletSpawn(Bullet& bullet, Player* player)
 
 }
 
+void EnemyBulletSpawn(Enemy_Bullet& enemybullet, Enemy enemy[])
+{
+    if(enemy->type == Tuco)
+        for(int j = 0; j < MAX_ENEMY; j++)
+            for (int i = 0; i < MAX_ENEMYBULLETS; i++)
+                if (enemybullet.bullet_mas[i].y > WINDOW_HEIGHT + enemybullet.size_y && enemybullet.active_bullet[i] == 1)
+                {
+                    enemybullet.pos_x = enemy->position.x + enemy->position.w / 2 - 10;
+                    enemybullet.pos_y = enemy->position.y + enemy->position.h * 2.8 / 4;
+                    enemybullet.bullet_mas[i] = { (int)enemybullet.pos_x, (int)enemybullet.pos_y, enemybullet.size_x, enemybullet.size_y };
+                }
+
+}
+
+bool CheckEnemyCooldown(Enemy_Bullet& enemybullet, int dt)
+{
+    enemybullet.cur_time += dt;
+    if (enemybullet.cur_time >= enemybullet.cd)
+    {
+        enemybullet.cur_time -= enemybullet.cd;
+        return false;
+    }
+    return true;
+}
 
 void BulletMovement(Bullet& bullet, Player* player, int dt)
 {
@@ -239,6 +293,40 @@ void BulletMovement(Bullet& bullet, Player* player, int dt)
                 {
                     bullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + bullet.size_y + 1, 0, 0 };
                     bullet.active_bullet[i] = 0;
+                }
+            }
+        }
+    }
+}
+
+void EnemyBulletMovement(Enemy_Bullet& enemybullet, Enemy* enemy, int dt)
+{
+    int cnt = 0;
+    for (int i = 0; i < enemybullet.count; i++)
+    {
+        if (enemybullet.active_bullet[i] == 0)
+            cnt++;
+    }
+    if (cnt == enemybullet.count && !enemybullet.is_NULL)
+        enemybullet.is_NULL = true;
+    else
+        enemybullet.is_NULL = false;
+    if (!enemybullet.is_NULL)
+    {
+        for (int i = 0; i < enemybullet.count; i++)
+        {
+            if (enemybullet.active_bullet[i] == 0 && enemybullet.bullet_mas[i].y != WINDOW_HEIGHT + enemybullet.size_y + 1)
+                enemybullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + enemybullet.size_y + 1, 0, 0 };
+            if (enemybullet.active_bullet[i] == 1)
+            {
+                if (enemybullet.bulletDirection[i] == DIR_LEFT)
+                    enemybullet.bullet_mas[i].x -= enemybullet.vx * dt / 1000;
+                else if (enemybullet.bulletDirection[i] == DIR_RIGHT)
+                    enemybullet.bullet_mas[i].x += enemybullet.vx * dt / 1000;
+                if (enemybullet.bullet_mas[i].y + enemybullet.size_y < 0)
+                {
+                    enemybullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + enemybullet.size_y + 1, 0, 0 };
+                    enemybullet.active_bullet[i] = 0;
                 }
             }
         }
@@ -319,6 +407,32 @@ void CheckBulletCollisionWithObstacle(Bullet& bullet, MapElement obstElements[MA
                     if (obstElements[i][j].symbol != ' ' && SDL_HasIntersection(&bulletRect, &obstacle))
                     {
                         bullet.active_bullet[k] = 0;
+                        break;
+                    }
+                }
+            }
+        }
+    }
+}
+
+void CheckEnemyBulletCollisionWithObstacle(Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH])
+{
+    for (int k = 0; k < enemybullet.count; k++)
+    {
+        if (enemybullet.active_bullet[k])
+        {
+            SDL_Rect bulletRect = enemybullet.bullet_mas[k];
+
+            // Проверка коллизий с препятствиями
+            for (int i = 0; i < MAP_HEIGHT; i++)
+            {
+                for (int j = 0; j < MAP_WIDTH; j++)
+                {
+                    SDL_Rect obstacle = obstElements[i][j].position;
+
+                    if (obstElements[i][j].symbol != ' ' && SDL_HasIntersection(&bulletRect, &obstacle))
+                    {
+                        enemybullet.active_bullet[k] = 0;
                         break;
                     }
                 }
@@ -435,11 +549,10 @@ void InitializeEnemy(Enemy* enemies, Player* player, SDL_Renderer* ren, const ch
 
         //printf("Pos[%d]: %d %d\n", i, enemy->position.x, enemy->position.y);
 
-        // Остальная инициализация врага
-
         enemy->hp = 50;
         enemy->damage = 35;
         enemy->money = 50;
+        enemy->speed = 2;
 
         enemy->frame = 0;
         enemy->count = 0;
@@ -447,6 +560,7 @@ void InitializeEnemy(Enemy* enemies, Player* player, SDL_Renderer* ren, const ch
         enemy->frameTime = 200;
         enemy->lastFrameTime = 0;
         enemy->direction = DIR_RIGHT;
+        enemy->isMoving = false;
     }
 }
 
@@ -472,31 +586,172 @@ void RenderEnemy(Enemy* enemy, SDL_Renderer* ren)
         flip = SDL_FLIP_HORIZONTAL;
     }
 
-    SDL_Rect srcRect = { enemy->frame * enemy->position.w, 0,  enemy->position.w,  enemy->position.h };
-    SDL_RenderCopyEx(ren, enemy->texture, &srcRect, &(enemy->position), 0, NULL, flip);
+    if (enemy->isMoving) {
+        SDL_Rect srcRect = { enemy->frame * enemy->position.w, 0,  enemy->position.w,  enemy->position.h };
+        SDL_RenderCopyEx(ren, enemy->texture, &srcRect, &(enemy->position), 0, NULL, flip);
+    }
+    else {
+        SDL_Rect srcRect = { 0, 0,  enemy->position.w,  enemy->position.h };
+        SDL_RenderCopyEx(ren, enemy->texture, &srcRect, &(enemy->position), 0, NULL, flip);
+    }
 }
 
-void UpdateEnemy(Enemy* enemy) 
+void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], Player* player, SDL_Rect& tempPosition)
 {
-    if (enemy->type == Tuco) {
-        // Обработка действий для Tuco (стрельба с пистолета)
-        // Например, проверьте, если Tuco в поле видимости игрока, и, если да, пусть он стреляет.
-        if (enemy->hp <= 0) {
-            SDL_DestroyTexture(enemy->texture);
-            enemy->texture = NULL;
+    for (int i = 0; i < MAX_ENEMY; i++)
+    {
+        bool collision = false;
+
+        // Проверка коллизий с препятствиями
+        for (int j = 0; j < MAP_HEIGHT; j++)
+        {
+            for (int k = 0; k < MAP_WIDTH; k++)
+            {
+                SDL_Rect obstacle = obstElements[j][k].position;
+
+                if (obstElements[j][k].symbol != ' ' && SDL_HasIntersection(&tempPosition, &obstacle))
+                {
+                    collision = true;
+                    break;
+                }
+            }
+            if (collision)
+            {
+                break;
+            }
+        }
+
+        // Проверка коллизий с игроком
+        SDL_Rect playerRect = player->position;
+        if (SDL_HasIntersection(&tempPosition, &playerRect))
+        {
+            collision = true;
+        }
+
+        // Проверка коллизий с другими врагами
+        for (int j = 0; j < MAX_ENEMY; j++)
+        {
+            if (i != j && enemy[j].hp > 0) // Исключаем проверку самого себя и мертвых врагов
+            {
+                SDL_Rect otherEnemyRect = enemy[j].position;
+
+                if (SDL_HasIntersection(&tempPosition, &otherEnemyRect))
+                {
+                    collision = true;
+                    break;
+                }
+            }
+        }
+
+        if (!collision)
+        {
+            enemy[i].position = tempPosition;
         }
     }
-    else if (enemy->type == Hector) {
-        // Обработка действий для Hector (подбегание и взрыв)
-        // Например, пусть Hector приближается к игроку и взрывается, если близко.
-        if (enemy->hp <= 0) {
-            SDL_DestroyTexture(enemy->texture);
-            enemy->texture = NULL;
+}
+
+
+
+void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH])
+{
+    bool is_cooldown_e = true;
+
+    if (!CheckEnemyCooldown(enemybullet, 16))
+        is_cooldown_e = false;
+
+    for (int i = 0; i < MAX_ENEMY; i++)
+    {
+        if (enemy[i].type == Tuco)
+        {
+            if (enemy[i].hp > 0)
+            {
+                int distanceX = player->position.x - enemy[i].position.x;
+                int distanceY = player->position.y - enemy[i].position.y;
+                int distance = sqrt(distanceX * distanceX + distanceY * distanceY);
+
+                if (distanceX < 0)
+                    enemy[i].direction = DIR_LEFT;
+                else
+                    enemy[i].direction = DIR_RIGHT;
+
+                if (distance < 500)
+                {
+                    SDL_Rect tempPosition = enemy[i].position;
+                    double angle = atan2(distanceY, distanceX);
+
+
+                    if (distance > 100)
+                    {
+                        enemy[i].isMoving = true;
+                        tempPosition.x += (int)(enemy[i].speed * cos(angle));
+                        tempPosition.y += (int)(enemy[i].speed * sin(angle));
+
+                        CheckEnemyCollision(enemy, obstElements, player, tempPosition);
+
+                        int cur_time = SDL_GetTicks();
+                        int deltatime = cur_time - enemy->lastFrameTime;
+
+                        if (deltatime >= enemy->frameTime) {
+                            enemy->frame = (enemy->frame + 1) % enemy->frameCount;
+                            enemy->lastFrameTime = cur_time;
+                        }
+                    }
+
+                    // Стрельба, когда Tuco ближе 300 пикселей к игроку
+                    if (distance < 300)
+                    {
+                        for (int i = 0; i < MAX_BULLETS; i++)
+                            if (enemybullet.active_bullet[i] == 0 && !is_cooldown_e)
+                            {
+                                enemybullet.bulletDirection[i] = enemy->direction;
+                                enemybullet.active_bullet[i] = 1;
+                                is_cooldown_e = true;
+                                break;
+                            }
+                        EnemyBulletSpawn(enemybullet, enemy);
+                    }
+                }
+            }
+        }
+        else if (enemy[i].type == Hector)
+        {
+            if (enemy[i].hp > 0)
+            {
+                int distanceX = player->position.x - enemy[i].position.x;
+                int distanceY = player->position.y - enemy[i].position.y;
+                int distance = sqrt(distanceX * distanceX + distanceY * distanceY);
+
+                if (distanceX < 0)
+                    enemy[i].direction = DIR_LEFT;
+                else
+                    enemy[i].direction = DIR_RIGHT;
+
+                if (distance < 300)
+                {
+                    enemy[i].isMoving = true;
+                    SDL_Rect tempPosition = enemy[i].position;
+                    double angle = atan2(distanceY, distanceX);
+
+                    tempPosition.x += (int)(enemy[i].speed * cos(angle));
+                    tempPosition.y += (int)(enemy[i].speed * sin(angle));
+
+                    CheckEnemyCollision(enemy, obstElements, player, tempPosition);
+
+                    int cur_time = SDL_GetTicks();
+                    int deltatime = cur_time - enemy->lastFrameTime;
+
+                    if (deltatime >= enemy->frameTime) {
+                        enemy->frame = (enemy->frame + 1) % enemy->frameCount;
+                        enemy->lastFrameTime = cur_time;
+                    }
+                }
+            }
         }
     }
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////
+
 void InitializeBonus(Bonus* bonus, SDL_Renderer* ren, const char* texturePath, int x, int y)
 {
     bonus->texture = loadTextureFromFile(texturePath, &(bonus->position), ren);

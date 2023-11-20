@@ -336,6 +336,17 @@ void CollisionWithBullet(Player& player, Bullet& bullet, Enemy enemy[], Bonus bo
 					}
 }
 
+void CollisionWithEnemyBullet(Player& player, Enemy_Bullet& enemybullet, Enemy enemy[], SDL_Renderer* ren)
+{
+		for (int k = 0; k < enemybullet.count; k++)
+			if (enemybullet.active_bullet[k] == 1)
+				if (enemybullet.bullet_mas[k].y <= player.position.y + player.position.h && enemybullet.bullet_mas[k].y + enemybullet.size_y >= player.position.y)
+					if (enemybullet.bullet_mas[k].x <= player.position.x + player.position.w && enemybullet.bullet_mas[k].x + enemybullet.size_x >= player.position.x)
+					{
+						player.hp -= enemybullet.dmg;
+						enemybullet.active_bullet[k] = 0;
+					}
+}
 
 void CollisionWithGrenade(Player& player, Grenade& grenade, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
 {
@@ -666,6 +677,10 @@ void Game(SDL_Renderer* ren)
 	Grenade grenade;
 	CreateGrenade(grenade, player, ren);
 
+	Enemy_Bullet enemybullet;
+	CreateEnemyBullet(enemybullet, enemy, ren);
+
+
 	Bonus bonus[MAX_BONUS];
 
 	for (int i = 0; i < (MAX_BONUS/2); i++)
@@ -738,22 +753,21 @@ void Game(SDL_Renderer* ren)
 				case SDL_SCANCODE_1:
 					player.currentWeapon.name = "Knife";
 					player.currentWeapon.damage = 10;
-					SDL_Rect oldRect_K = player.position;  // Сохраняем текущий SDL_Rect
+					SDL_Rect oldRect_K = player.position;
 					SDL_DestroyTexture(player.texture);
 					player.texture = loadTextureFromFile("HEISENBERGKnife1.png", &oldRect_K, ren);
-				//	InitializePlayer(&player, ren, "HEISENBERGKnife1.png", player.position.x, player.position.y);
 					break;
 				case SDL_SCANCODE_2:
 					player.currentWeapon.name = "Pistol";
 					player.currentWeapon.damage = 20;
-					SDL_Rect oldRect_P = player.position;  // Сохраняем текущий SDL_Rect
+					SDL_Rect oldRect_P = player.position;
 					SDL_DestroyTexture(player.texture);
 					player.texture = loadTextureFromFile("HEISENBERGPistol1.png", &oldRect_P, ren);
 					break;
 				case SDL_SCANCODE_3:
 					player.currentWeapon.name = "Grenade";
 					player.currentWeapon.damage = 30;
-					SDL_Rect oldRect_G = player.position;  // Сохраняем текущий SDL_Rect
+					SDL_Rect oldRect_G = player.position;
 					SDL_DestroyTexture(player.texture);
 					player.texture = loadTextureFromFile("HEISENBERGGrenade1.png", &oldRect_G, ren);
 					break;
@@ -827,12 +841,19 @@ void Game(SDL_Renderer* ren)
         // Обновление игрока
 		UpdatePlayer(&player, isUpPressed, isDownPressed, isLeftPressed, isRightPressed, obstElements, enemy);
 
+		for (int i = 0; i < MAX_ENEMY; i++)
+		{
+			UpdateEnemy(&enemy[i], &player, enemybullet, obstElements);
+		}
+
 		BulletMovement(bullet, &player, 16);
+		EnemyBulletMovement(enemybullet, enemy, 16);
 		GrenadeMovement(grenade, &player, 16);
 
 		CheckBulletCollisionWithObstacle(bullet, obstElements);
+		CheckEnemyBulletCollisionWithObstacle(enemybullet, obstElements);
 		CheckGrenadeCollisionWithObstacle(grenade, obstElements);
-		CheckLocation(player, enemy, bonus, ren, surfElements, obstElements, currentLocation);
+		CheckLocation(player, enemy, bonus, ren, surfElements, obstElements, currentLocation, bullet, enemybullet);
 
         // Очистка экрана
         SDL_SetRenderDrawColor(ren, 255, 255, 255, 255);
@@ -860,12 +881,14 @@ void Game(SDL_Renderer* ren)
 			RenderEnemy(&enemy[i], ren);
 
 		CollisionWithBullet(player, bullet,enemy, bonus, ren);
+		CollisionWithEnemyBullet(player, enemybullet, enemy, ren);
 		CollisionWithGrenade(player, grenade, enemy, bonus, ren);
 		CollisionWithBonus(player, bonus);
 
 
 		GrenadeDraw(grenade, ren);
 		BulletDraw(bullet, ren);
+		EnemyBulletDraw(enemybullet, ren);
 
 		RenderGameText(font, &player, ren);
 
