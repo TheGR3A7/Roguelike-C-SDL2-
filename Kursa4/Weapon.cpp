@@ -107,6 +107,63 @@ void BulletDraw(Bullet bullet, SDL_Renderer* ren)
         }
 }
 
+void InitializeExplosion(Explosion& explosion, SDL_Renderer* ren)
+{
+    explosion.texture = loadTextureFromFile("explosion.png", &explosion.rect, ren);
+    explosion.frameCount = 10;  // Количество кадров в анимации взрыва
+    explosion.frameTime = 150;   // Время между кадрами взрыва
+    explosion.curFrame = 0;
+    explosion.lastFrameTime = 0;
+    explosion.isActive = false;
+
+    explosion.rect.w = 950 / explosion.frameCount;  // Размер одного кадра
+    explosion.rect.h = 95;
+}
+
+void Explode(Explosion& explosion, int x, int y, SDL_Renderer* ren)
+{
+    explosion.isActive = true;
+    explosion.rect.x = x - explosion.rect.w / 3;
+    explosion.rect.y = y - explosion.rect.h / 3;
+
+    // Сбросить текущий кадр анимации взрыва
+    explosion.curFrame = 0;
+    explosion.lastFrameTime = SDL_GetTicks();
+}
+
+void UpdateExplosion(Explosion& explosion)
+{
+    if (explosion.isActive)
+    {
+        int curTime = SDL_GetTicks();
+        int deltaTime = curTime - explosion.lastFrameTime;
+
+        if (deltaTime >= explosion.frameTime)
+        {
+            explosion.curFrame = (explosion.curFrame + 1) % explosion.frameCount;
+            explosion.lastFrameTime = curTime;
+
+            // Проверка завершения анимации взрыва
+            if (explosion.curFrame == explosion.frameCount - 1)
+            {
+                explosion.isActive = false;
+            }
+        }
+    }
+}
+
+void ExplosionDraw(Explosion& explosion, SDL_Renderer* ren)
+{
+    if (explosion.isActive)
+    {
+        // Рассчитать и установить область прямоугольника для текущего кадра анимации
+        SDL_Rect srcRect = { explosion.curFrame * explosion.rect.w, 0, explosion.rect.w, explosion.rect.h };
+
+        // Отрисовка текущего кадра анимации взрыва
+        SDL_RenderCopy(ren, explosion.texture, &srcRect, &explosion.rect);
+    }
+}
+
 void CreateGrenade(Grenade& grenade, Player& player, SDL_Renderer* ren)
 {
     if (grenade.texture == nullptr)
@@ -126,7 +183,16 @@ void CreateGrenade(Grenade& grenade, Player& player, SDL_Renderer* ren)
     {
         grenade.grenade_mas[i] = { 0,(int)WINDOW_HEIGHT + grenade.size_y + 1, 0, 0 };
         grenade.is_Moving[i] = true;
+        grenade.grenadeDirection[i] = player.direction;
+        InitializeExplosion(grenade.explosion[i], ren);
     }
+    grenade.damageInterval = 150; 
+
+    for (int i = 0; i < grenade.count; i++)
+    {
+        grenade.lastDamageTime[i] = 0;  
+    }
+
     grenade.is_NULL = true;
 }
 
@@ -157,3 +223,4 @@ void GrenadeDraw(Grenade grenade, SDL_Renderer* ren)
             SDL_RenderCopyEx(ren, grenade.texture, NULL, &grenade.grenade_mas[i], 0, NULL, flip);
         }
 }
+

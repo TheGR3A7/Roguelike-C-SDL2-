@@ -19,7 +19,7 @@ void InitializePlayer(Player* player, SDL_Renderer* ren, const char* texturePath
     player->position.h = 100; 
     player->prevPosition = player->position;
 
-    player->hp = 100; 
+    player->hp = 10000; 
     player->money = 0;
     player->maxhp = 200;
     player->maxmoney = 999;
@@ -29,6 +29,8 @@ void InitializePlayer(Player* player, SDL_Renderer* ren, const char* texturePath
     player->frameTime = 200; 
     player->lastFrameTime = 0; 
     player->direction = DIR_RIGHT;
+
+    player->lastExplosionDamageTime = 0;
 }
 
 void RenderPlayer(Player* player, SDL_Renderer* ren)
@@ -71,13 +73,13 @@ void CheckCollision(Player* player, MapElement obstElements[MAP_HEIGHT][MAP_WIDT
     // Проверка коллизий со всеми врагами
     for (int i = 0; i < MAX_ENEMY; i++)
     {
-            SDL_Rect enemies = enemy[i].position;
+        SDL_Rect enemies = enemy[i].position;
 
-            if (SDL_HasIntersection(&tempPosition, &enemies))
-            {
-                collision = true;
-                break;
-            }
+        if (SDL_HasIntersection(&tempPosition, &enemies))
+        {
+            collision = true;
+            break;
+        }
         if (collision)
         {
             break;
@@ -333,7 +335,7 @@ void EnemyBulletMovement(Enemy_Bullet& enemybullet, Enemy* enemy, int dt)
     }
 }
 
-void GrenadeSpawn(Grenade& grenade, Player* player)
+void GrenadeSpawn(Grenade& grenade, Player* player, SDL_Renderer* ren)
 {
 
     for (int i = 0; i < MAX_GRENADE; i++)
@@ -342,12 +344,15 @@ void GrenadeSpawn(Grenade& grenade, Player* player)
             grenade.pos_x = player->position.x + player->position.w / 2 - 10;
             grenade.pos_y = player->position.y + player->position.h * 2.8 / 4;
             grenade.grenade_mas[i] = { (int)grenade.pos_x, (int)grenade.pos_y, grenade.size_x, grenade.size_y };
+            grenade.grenadeDirection[i] = player->direction;
+            grenade.active_grenade[i] = 1;
+            grenade.is_Moving[i] = true;
         }
 
 }
 
 
-void GrenadeMovement(Grenade& grenade, Player* player, int dt)
+void GrenadeMovement(Grenade& grenade, Player* player, SDL_Renderer* ren, int dt)
 {
     int cnt = 0;
     for (int i = 0; i < grenade.count; i++)
@@ -375,13 +380,14 @@ void GrenadeMovement(Grenade& grenade, Player* player, int dt)
                         grenade.grenade_mas[i].x += grenade.vx * dt / 1000; 
                     if (abs(grenade.grenade_mas[i].x - player->position.x) >= 250)
                     {
-                        grenade.is_Moving[i] = false;  
+                        grenade.is_Moving[i] = false; 
                     }
-                }
-                if (grenade.grenade_mas[i].y + grenade.size_y < 0)
-                {
-                    grenade.grenade_mas[i] = { 0, (int)WINDOW_HEIGHT + grenade.size_y + 1, 0, 0 };
-                    grenade.active_grenade[i] = 0;
+
+                    if (!grenade.is_Moving[i] && !grenade.explosion[i].isActive)
+                    {
+                        Explode(grenade.explosion[i], grenade.grenade_mas[i].x, grenade.grenade_mas[i].y, ren);
+                        grenade.active_grenade[i] = 0;
+                    }
                 }
             }
         }
@@ -441,7 +447,7 @@ void CheckEnemyBulletCollisionWithObstacle(Enemy_Bullet& enemybullet, MapElement
     }
 }
 
-void CheckGrenadeCollisionWithObstacle(Grenade& grenade, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH])
+void CheckGrenadeCollisionWithObstacle(Grenade& grenade, SDL_Renderer* ren, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH])
 {
     for (int k = 0; k < grenade.count; k++)
     {
@@ -459,6 +465,8 @@ void CheckGrenadeCollisionWithObstacle(Grenade& grenade, MapElement obstElements
                     if (obstElements[i][j].symbol != ' ' && SDL_HasIntersection(&grenadeRect, &obstacle))
                     {
                         grenade.is_Moving[k] = 0;
+                        Explode(grenade.explosion[k], grenade.grenade_mas[k].x, grenade.grenade_mas[k].y, ren);
+                        grenade.active_grenade[k] = 0;
                         break;
                     }
                 }
@@ -466,6 +474,7 @@ void CheckGrenadeCollisionWithObstacle(Grenade& grenade, MapElement obstElements
         }
     }
 }
+
 
 void CleanUpPlayer(Player* player) 
 {
@@ -549,6 +558,7 @@ void InitializeEnemy(Enemy* enemies, Player* player, SDL_Renderer* ren, const ch
 
         //printf("Pos[%d]: %d %d\n", i, enemy->position.x, enemy->position.y);
 
+
         enemy->hp = 50;
         enemy->damage = 35;
         enemy->money = 50;
@@ -596,7 +606,7 @@ void RenderEnemy(Enemy* enemy, SDL_Renderer* ren)
     }
 }
 
-void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], Player* player, SDL_Rect& tempPosition)
+void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], Player* player, SDL_Rect& tempPosition, SDL_Renderer* ren)
 {
     for (int i = 0; i < MAX_ENEMY; i++)
     {
@@ -626,6 +636,7 @@ void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_
         if (SDL_HasIntersection(&tempPosition, &playerRect))
         {
             collision = true;
+            break;
         }
 
         // Проверка коллизий с другими врагами
@@ -652,7 +663,7 @@ void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_
 
 
 
-void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH])
+void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], SDL_Renderer* ren)
 {
     bool is_cooldown_e = true;
 
@@ -686,25 +697,26 @@ void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElem
                         tempPosition.x += (int)(enemy[i].speed * cos(angle));
                         tempPosition.y += (int)(enemy[i].speed * sin(angle));
 
-                        CheckEnemyCollision(enemy, obstElements, player, tempPosition);
+                        CheckEnemyCollision(enemy, obstElements, player, tempPosition, ren);
 
                         int cur_time = SDL_GetTicks();
-                        int deltatime = cur_time - enemy->lastFrameTime;
+                        int deltatime = cur_time - enemy[i].lastFrameTime;
 
-                        if (deltatime >= enemy->frameTime) {
-                            enemy->frame = (enemy->frame + 1) % enemy->frameCount;
-                            enemy->lastFrameTime = cur_time;
+                        if (deltatime >= enemy[i].frameTime)
+                        {
+                            enemy[i].frame = (enemy[i].frame + 1) % enemy[i].frameCount;
+                            enemy[i].lastFrameTime = cur_time;
                         }
                     }
 
                     // Стрельба, когда Tuco ближе 300 пикселей к игроку
                     if (distance < 300)
                     {
-                        for (int i = 0; i < MAX_BULLETS; i++)
-                            if (enemybullet.active_bullet[i] == 0 && !is_cooldown_e)
+                        for (int j = 0; j < MAX_BULLETS; j++)
+                            if (enemybullet.active_bullet[j] == 0 && !is_cooldown_e)
                             {
-                                enemybullet.bulletDirection[i] = enemy->direction;
-                                enemybullet.active_bullet[i] = 1;
+                                enemybullet.bulletDirection[j] = enemy->direction;
+                                enemybullet.active_bullet[j] = 1;
                                 is_cooldown_e = true;
                                 break;
                             }
@@ -735,14 +747,15 @@ void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElem
                     tempPosition.x += (int)(enemy[i].speed * cos(angle));
                     tempPosition.y += (int)(enemy[i].speed * sin(angle));
 
-                    CheckEnemyCollision(enemy, obstElements, player, tempPosition);
+                    CheckEnemyCollision(enemy, obstElements, player, tempPosition, ren);
 
                     int cur_time = SDL_GetTicks();
-                    int deltatime = cur_time - enemy->lastFrameTime;
+                    int deltatime = cur_time - enemy[i].lastFrameTime;
 
-                    if (deltatime >= enemy->frameTime) {
-                        enemy->frame = (enemy->frame + 1) % enemy->frameCount;
-                        enemy->lastFrameTime = cur_time;
+                    if (deltatime >= enemy[i].frameTime)
+                    {
+                        enemy[i].frame = (enemy[i].frame + 1) % enemy[i].frameCount;
+                        enemy[i].lastFrameTime = cur_time;
                     }
                 }
             }

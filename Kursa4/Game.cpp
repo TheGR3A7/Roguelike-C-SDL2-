@@ -239,54 +239,6 @@ bool PointInRect(int x, int y, const SDL_Rect& rect)
 }
 
 
-//void CollisionWithBullet(Player& player, Bullet& bullet, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
-//{
-//	for (int i = 0; i < MAX_ENEMY; i++)
-//		for (int k = 0; k < bullet.count; k++)
-//			if (bullet.active_bullet[k] == 1)
-//				if (bullet.bullet_mas[k].y <= enemy[i].position.y + enemy[i].position.h && bullet.bullet_mas[k].y + bullet.size_y >= enemy[i].position.y)
-//					if (bullet.bullet_mas[k].x <= enemy[i].position.x + enemy[i].position.w && bullet.bullet_mas[k].x + bullet.size_x >= enemy[i].position.x)
-//					{
-//						enemy[i].hp -= bullet.dmg;
-//						if (enemy[i].hp <= 0)
-//						{
-//							int bonusIndex = -1;  // Переменная для хранения индекса созданного бонуса
-//							for (int j = 0; j < MAX_ENEMY; j++)
-//							{
-//								if (bonus[j].position.y >= WINDOW_HEIGHT + 1)
-//								{
-//									int chance = rand() % 10 + 1;
-//									printf("Chance: %d\n", chance);
-//									if (chance <= 10)
-//									{
-//										int typeChance = rand() % 10 + 1;
-//										if (typeChance <= 1)
-//										{
-//											bonus[j].Bontype = Heart;
-//											bonusIndex = j;
-//										}
-//										else {
-//											bonus[j].Bontype = Money;
-//											bonusIndex = j + 5;
-//										}
-//										printf("tchance: %d\n", typeChance);
-//									}
-//								}
-//							}
-//
-//							if (bonusIndex != -1)
-//							{
-//								bonus[bonusIndex].position.x = enemy[i].position.x + enemy[i].position.w / 2;
-//								bonus[bonusIndex].position.y = enemy[i].position.y + enemy[i].position.h / 2;
-//							}
-//
-//							enemy[i].position.y = WINDOW_HEIGHT + 1;
-//						}
-//
-//						bullet.active_bullet[k] = 0;
-//					}
-//}
-
 void CollisionWithBullet(Player& player, Bullet& bullet, Enemy enemy[], Bonus bonus[], SDL_Renderer* ren)
 {
 	for (int i = 0; i < MAX_ENEMY; i++)
@@ -353,10 +305,15 @@ void CollisionWithGrenade(Player& player, Grenade& grenade, Enemy enemy[], Bonus
 	for (int i = 0; i < MAX_ENEMY; i++)
 		for (int k = 0; k < grenade.count; k++)
 			if (grenade.active_grenade[k] == 1)
+			{
 				if (grenade.grenade_mas[k].y <= enemy[i].position.y + enemy[i].position.h && grenade.grenade_mas[k].y + grenade.size_y >= enemy[i].position.y)
+				{
 					if (grenade.grenade_mas[k].x <= enemy[i].position.x + enemy[i].position.w && grenade.grenade_mas[k].x + grenade.size_x >= enemy[i].position.x)
 					{
-						// добавить еще домаг от взрыва
+						if (SDL_HasIntersection(&grenade.explosion[k].rect, &enemy[i].position))
+						{
+							enemy[i].hp -= grenade.dmg;
+						}
 						if (enemy[i].hp <= 0)
 						{
 							int chance = rand() % 10 + 1;
@@ -393,8 +350,25 @@ void CollisionWithGrenade(Player& player, Grenade& grenade, Enemy enemy[], Bonus
 							enemy[i].position.y = WINDOW_HEIGHT + 1;
 						}
 						grenade.is_Moving[k] = 0;
-						//	grenade.active_grenade[k] = 0;
+						Explode(grenade.explosion[k], grenade.grenade_mas[k].x, grenade.grenade_mas[k].y, ren);
+						grenade.active_grenade[k] = 0;
 					}
+				}
+			}
+	for (int i = 0; i < MAX_GRENADE; i++)
+	{
+		if (grenade.active_grenade[i] && SDL_HasIntersection(&grenade.explosion[i].rect, &player.position))
+		{
+			int curTime = SDL_GetTicks();
+			int deltaTime = curTime - player.lastExplosionDamageTime;
+			if (deltaTime >= grenade.damageInterval)
+			{
+				player.hp -= grenade.dmg;
+				player.lastExplosionDamageTime = curTime;
+			}
+		}
+	}
+
 }
 
 void CollisionWithBonus(Player& player, Bonus bonus[])
@@ -640,7 +614,6 @@ void DeadWallpaper(Player*player, SDL_Renderer* ren)
 }
 
 
-
 void Game(SDL_Renderer* ren)
 {
 	srand(time(NULL));
@@ -798,7 +771,7 @@ void Game(SDL_Renderer* ren)
 								is_cooldown_g = true;
 								break;
 							}
-						GrenadeSpawn(grenade, &player);
+						GrenadeSpawn(grenade, &player, ren);
 					}
 					break;
 				case SDL_SCANCODE_W:
@@ -843,16 +816,17 @@ void Game(SDL_Renderer* ren)
 
 		for (int i = 0; i < MAX_ENEMY; i++)
 		{
-			UpdateEnemy(&enemy[i], &player, enemybullet, obstElements);
+			UpdateEnemy(&enemy[i], &player, enemybullet, obstElements, ren);
 		}
 
 		BulletMovement(bullet, &player, 16);
 		EnemyBulletMovement(enemybullet, enemy, 16);
-		GrenadeMovement(grenade, &player, 16);
+		GrenadeMovement(grenade, &player, ren, 16);
+
 
 		CheckBulletCollisionWithObstacle(bullet, obstElements);
 		CheckEnemyBulletCollisionWithObstacle(enemybullet, obstElements);
-		CheckGrenadeCollisionWithObstacle(grenade, obstElements);
+		CheckGrenadeCollisionWithObstacle(grenade, ren, obstElements);
 		CheckLocation(player, enemy, bonus, ren, surfElements, obstElements, currentLocation, bullet, enemybullet);
 
         // Очистка экрана
@@ -875,7 +849,6 @@ void Game(SDL_Renderer* ren)
 
 		RenderPlayer(&player, ren);
 
-		//RenderAllBonus(bonus, ren);
 
 		for(int i = 0; i < MAX_ENEMY; i++)
 			RenderEnemy(&enemy[i], ren);
@@ -890,6 +863,13 @@ void Game(SDL_Renderer* ren)
 		BulletDraw(bullet, ren);
 		EnemyBulletDraw(enemybullet, ren);
 
+		for (int i = 0; i < MAX_GRENADE; i++)
+		{
+			UpdateExplosion(grenade.explosion[i]);
+			ExplosionDraw(grenade.explosion[i], ren);
+		}
+
+
 		RenderGameText(font, &player, ren);
 
 		if (player.hp <= 0)
@@ -901,7 +881,7 @@ void Game(SDL_Renderer* ren)
 		for(int i = 0; i <MAX_BONUS;i++)
 			RenderBonus(bonus[i], ren);
 
-        // Обновление экрана
+
         SDL_RenderPresent(ren);
         SDL_Delay(16);
     }

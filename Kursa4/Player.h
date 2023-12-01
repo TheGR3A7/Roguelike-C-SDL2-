@@ -6,6 +6,7 @@
 
 const int MAX_ENEMY = 3;
 const int MAX_BONUS = 10;
+const int MAX_EXPLOSIONS = 1;
 
 struct Player
 {
@@ -22,6 +23,7 @@ struct Player
 	int lastFrameTime;
 	int direction;
 	Weapon currentWeapon;
+	int lastExplosionDamageTime;
 };
 
 enum EnemyType 
@@ -74,17 +76,17 @@ void CleanUpPlayer(Player* player);
 void InitializeEnemy(Enemy* enemies, Player* player, SDL_Renderer* ren, const char* hectorTexturePath, const char* tucoTexturePath, int x, int y, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
 void RenderEnemy(Enemy* enemy, SDL_Renderer* ren);
 void RespawnEnemies(Enemy* enemies, Player* player, SDL_Renderer* ren, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
-void UpdateEnemy(Enemy* enemy, Player* player, Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
+void UpdateEnemy(Enemy* enemy, Player* player, Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], SDL_Renderer* ren);
 void InitializeBonus(Bonus* bonus, SDL_Renderer* ren, const char* texturePath, int x, int y);
 void RenderBonus(Bonus bonus, SDL_Renderer* ren);
-void GrenadeSpawn(Grenade& grenade, Player* player);
-void GrenadeMovement(Grenade& grenade, Player* player, int dt);
+void GrenadeSpawn(Grenade& grenade, Player* player, SDL_Renderer* ren);
+void GrenadeMovement(Grenade& grenade, Player* player, SDL_Renderer* ren, int dt);
 void CheckBulletCollisionWithObstacle(Bullet& bullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
-void CheckGrenadeCollisionWithObstacle(Grenade& grenade, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
+void CheckGrenadeCollisionWithObstacle(Grenade& grenade, SDL_Renderer* ren, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
 bool IsOverlap(int x1, int y1, int x2, int y2, int margin);
 bool IsOverlapWithOtherEnemies(Enemy* enemies, int currentEnemyIndex, int margin);
 bool IsOverlapWithObstacles(int x, int y, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
-void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], Player* player, SDL_Rect& tempPosition);
+void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], Player* player, SDL_Rect& tempPosition, SDL_Renderer* ren);
 void EnemyBulletSpawn(Enemy_Bullet& enemybullet, Enemy enemy[]);
 void EnemyBulletMovement(Enemy_Bullet& enemybullet, Enemy* enemy, int dt);
 bool CheckEnemyCooldown(Enemy_Bullet& enemybullet, int dt);
