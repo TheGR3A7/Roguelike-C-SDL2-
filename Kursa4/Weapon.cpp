@@ -27,7 +27,6 @@ void CreateBullet(Bullet& bullet, Player& player, SDL_Renderer* ren)
         bullet.size_y = 8;
         bullet.dmg = 20;
         bullet.cd = 500;
-        bullet.vy = 500;
         bullet.vx = 500;
         bullet.count = MAX_BULLETS;
 
@@ -50,7 +49,6 @@ void CreateEnemyBullet(Enemy_Bullet& enemybullet, Enemy enemy[], SDL_Renderer* r
     enemybullet.size_y = 8;
     enemybullet.dmg = 20;
     enemybullet.cd = 1000;
-    enemybullet.vy = 300;
     enemybullet.vx = 300;
     enemybullet.count = MAX_ENEMYBULLETS;
 
@@ -175,7 +173,6 @@ void CreateGrenade(Grenade& grenade, Player& player, SDL_Renderer* ren)
     grenade.size_y = 25;
     grenade.dmg = 30;
     grenade.cd = 800;
-    grenade.vy = 300;
     grenade.vx = 300;
     grenade.count = MAX_GRENADE;
 

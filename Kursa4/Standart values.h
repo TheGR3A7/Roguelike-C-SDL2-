@@ -1,6 +1,5 @@
 #pragma once
 
-#define FPS 120
 #define DIR_RIGHT 1
 #define DIR_LEFT 2
 

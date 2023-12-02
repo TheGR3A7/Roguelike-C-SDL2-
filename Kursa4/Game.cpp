@@ -816,7 +816,7 @@ void Game(SDL_Renderer* ren)
 
 		for (int i = 0; i < MAX_ENEMY; i++)
 		{
-			UpdateEnemy(&enemy[i], &player, enemybullet, obstElements, ren);
+			UpdateEnemy(&enemy[i], &player, enemybullet, obstElements, grenade, ren);
 		}
 
 		BulletMovement(bullet, &player, 16);
@@ -869,6 +869,11 @@ void Game(SDL_Renderer* ren)
 			ExplosionDraw(grenade.explosion[i], ren);
 		}
 
+		for (int i = 0; i < MAX_ENEMY; i++)
+		{
+			UpdateExplosion(enemy[i].explosion[0]);
+			ExplosionDraw(enemy[i].explosion[0], ren);
+		}
 
 		RenderGameText(font, &player, ren);
 

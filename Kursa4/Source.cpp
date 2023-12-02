@@ -10,21 +10,6 @@ SDL_Window* win = NULL;
 SDL_Renderer* ren = NULL;
 SDL_Surface* win_surface = NULL;
 
-void WindowDelay()
-{
-	static int time = 0;
-	while (true)
-	{
-		if (clock() - time >= 1000 / FPS)
-		{
-			time = clock();
-			break;
-		}
-		else
-			SDL_Delay(1);
-	}
-}
-
 
 int main(int argc, char* argv[])
 {

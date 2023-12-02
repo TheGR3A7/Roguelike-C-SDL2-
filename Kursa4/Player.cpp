@@ -558,7 +558,10 @@ void InitializeEnemy(Enemy* enemies, Player* player, SDL_Renderer* ren, const ch
 
         //printf("Pos[%d]: %d %d\n", i, enemy->position.x, enemy->position.y);
 
+        InitializeExplosion(enemy->explosion[0], ren);
 
+
+        enemy->damageInterval = 150;
         enemy->hp = 50;
         enemy->damage = 35;
         enemy->money = 50;
@@ -663,7 +666,7 @@ void CheckEnemyCollision(Enemy enemy[], MapElement obstElements[MAP_HEIGHT][MAP_
 
 
 
-void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], SDL_Renderer* ren)
+void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], Grenade& grenade, SDL_Renderer* ren)
 {
     bool is_cooldown_e = true;
 
@@ -756,6 +759,20 @@ void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElem
                     {
                         enemy[i].frame = (enemy[i].frame + 1) % enemy[i].frameCount;
                         enemy[i].lastFrameTime = cur_time;
+                    }
+
+                    // ѕроверка столкновени€ и вызов взрыва могут произойти независимо от рассто€ни€
+                    if (SDL_HasIntersection(&tempPosition, &player->position))
+                    {
+                        Explode(enemy[i].explosion[0], enemy[i].position.x + enemy[i].position.w / 3, enemy[i].position.y + enemy[i].position.h / 3, ren);
+                        int curTime = SDL_GetTicks();
+                        int deltaTime = curTime - player->lastExplosionDamageTime;
+                        if (deltaTime >= enemy[i].damageInterval)
+                        {
+                            player->hp -= grenade.dmg;
+                            player->lastExplosionDamageTime = curTime;
+                        }
+                        enemy[i].position.y = WINDOW_HEIGHT + 1;
                     }
                 }
             }

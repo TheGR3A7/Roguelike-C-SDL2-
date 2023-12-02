@@ -48,6 +48,9 @@ struct Enemy
 	int lastFrameTime;
 	int direction;
 	bool isMoving;
+
+	Explosion explosion[1];
+	int damageInterval;
 };
 
 enum BonusType
@@ -76,7 +79,7 @@ void CleanUpPlayer(Player* player);
 void InitializeEnemy(Enemy* enemies, Player* player, SDL_Renderer* ren, const char* hectorTexturePath, const char* tucoTexturePath, int x, int y, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
 void RenderEnemy(Enemy* enemy, SDL_Renderer* ren);
 void RespawnEnemies(Enemy* enemies, Player* player, SDL_Renderer* ren, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH]);
-void UpdateEnemy(Enemy* enemy, Player* player, Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], SDL_Renderer* ren);
+void UpdateEnemy(Enemy* enemy, Player* player, Enemy_Bullet& enemybullet, MapElement obstElements[MAP_HEIGHT][MAP_WIDTH], Grenade& grenade, SDL_Renderer* ren);
 void InitializeBonus(Bonus* bonus, SDL_Renderer* ren, const char* texturePath, int x, int y);
 void RenderBonus(Bonus bonus, SDL_Renderer* ren);
 void GrenadeSpawn(Grenade& grenade, Player* player, SDL_Renderer* ren);

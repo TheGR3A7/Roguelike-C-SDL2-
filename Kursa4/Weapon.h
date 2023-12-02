@@ -17,7 +17,7 @@ struct Weapon {
 
 struct Bullet {
     int size_x, size_y, dmg, cd, cur_time = 0, count;
-    double pos_x, pos_y, vx, vy;
+    double pos_x, pos_y, vx;
     SDL_Rect bullet_mas[MAX_BULLETS];
     int bulletDirection[MAX_BULLETS];
     int active_bullet[MAX_BULLETS] = { 0 };
@@ -39,7 +39,7 @@ struct Explosion
 
 struct Grenade {
     int size_x, size_y, dmg, cd, cur_time = 0, count;
-    double pos_x, pos_y, vx, vy;
+    double pos_x, pos_y, vx;
     SDL_Rect grenade_mas[MAX_GRENADE];
     int grenadeDirection[MAX_GRENADE];
     int active_grenade[MAX_GRENADE] = { 0 };
@@ -56,10 +56,10 @@ struct Grenade {
 struct Enemy_Bullet
 {
     int size_x, size_y, dmg, cd, cur_time = 0, count;
-    double pos_x, pos_y, vx, vy;
-    SDL_Rect bullet_mas[100];
-    int bulletDirection[MAX_BULLETS];
-    int active_bullet[100] = { 0 };
+    double pos_x, pos_y, vx;
+    SDL_Rect bullet_mas[MAX_ENEMYBULLETS];
+    int bulletDirection[MAX_ENEMYBULLETS];
+    int active_bullet[MAX_ENEMYBULLETS] = { 0 };
     SDL_Rect rect = { 0, 0, 0, 0 };
     SDL_Texture* texture = nullptr;
     bool is_NULL;
