@@ -10,7 +10,7 @@ const int MAX_EXPLOSIONS = 1;
 
 struct Player
 {
-	SDL_Texture* texture;
+	SDL_Texture* texture = nullptr;
 	SDL_Rect position;
 	SDL_Rect prevPosition;
 	int hp;
@@ -35,7 +35,7 @@ enum EnemyType
 struct Enemy 
 {
 	EnemyType type;
-	SDL_Texture* texture;
+	SDL_Texture* texture = nullptr;
 	SDL_Rect position;
 	int hp;
 	int damage;
@@ -62,7 +62,7 @@ enum BonusType
 struct Bonus
 {
 	BonusType Bontype;
-	SDL_Texture* texture;
+	SDL_Texture* texture = nullptr;
 	SDL_Rect position;
 	bool isActive;
 };

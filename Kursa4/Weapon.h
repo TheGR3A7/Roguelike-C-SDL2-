@@ -28,7 +28,7 @@ struct Bullet {
 
 struct Explosion 
 {
-    SDL_Texture* texture;
+    SDL_Texture* texture = nullptr;
     SDL_Rect rect;
     int frameCount;
     int frameTime;
@@ -63,7 +63,6 @@ struct Enemy_Bullet
     SDL_Rect rect = { 0, 0, 0, 0 };
     SDL_Texture* texture = nullptr;
     bool is_NULL;
-    int cur_frame_time = 0, max_frame_time = 200, frame = 0, max_frame = 4;
 };
 
 

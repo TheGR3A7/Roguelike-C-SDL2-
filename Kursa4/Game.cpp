@@ -37,7 +37,7 @@ void About(SDL_Renderer* ren)
 
 	while (true)
 	{
-		while (SDL_PollEvent(&event))  // Используйте переменную event здесь
+		while (SDL_PollEvent(&event)) 
 		{
 			switch (event.type)
 			{
@@ -142,7 +142,7 @@ void Menu(SDL_Renderer* ren)
 
 	while (true)
 	{
-		while (SDL_PollEvent(&event))  // Используйте переменную event здесь
+		while (SDL_PollEvent(&event))  
 		{
 			switch (event.type)
 			{
@@ -523,6 +523,10 @@ void RenderGameText(TTF_Font* font, Player* player, SDL_Renderer* ren)
 	SDL_RenderCopy(ren, MON_valueshadowtext, NULL, &MON_valueshadow);
 	SDL_RenderCopy(ren, MON_valuetext, NULL, &MON_value);
 
+	SDL_DestroyTexture(HP_text);
+	SDL_DestroyTexture(MON_text);
+	SDL_DestroyTexture(HP_shadowtext);
+	SDL_DestroyTexture(MON_shadowtext);
 	SDL_DestroyTexture(HP_valuetext);
 	SDL_DestroyTexture(MON_valuetext);
 	SDL_DestroyTexture(HP_valueshadowtext);
@@ -550,7 +554,7 @@ void DeadWallpaper(Player*player, SDL_Renderer* ren)
 
 		while (true)
 		{
-			while (SDL_PollEvent(&event))  // Используйте переменную event здесь
+			while (SDL_PollEvent(&event))  
 			{
 				switch (event.type)
 				{
@@ -625,14 +629,14 @@ void Game(SDL_Renderer* ren)
 	bool is_cooldown_g = true;
 	int currentLocation = 1;
 
-	// Загрузка данных карты из файла
+	
 	LoadMapDataFromFile("surfLoc1.txt", "obstLoc1.txt");
 
-	// Создание массива для элементов карты
+	
 	MapElement surfElements[MAP_HEIGHT][MAP_WIDTH]; 
 	MapElement obstElements[MAP_HEIGHT][MAP_WIDTH];
 
-	// Загрузка текстур элементов карты
+	
 	LoadSurfaceElements(ren, surfElements);
 	LoadObstacleElements(ren, obstElements);
 
@@ -811,7 +815,6 @@ void Game(SDL_Renderer* ren)
 			}
 		}
 
-        // Обновление игрока
 		UpdatePlayer(&player, isUpPressed, isDownPressed, isLeftPressed, isRightPressed, obstElements, enemy);
 
 		for (int i = 0; i < MAX_ENEMY; i++)

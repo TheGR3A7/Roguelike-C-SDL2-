@@ -87,7 +87,6 @@ void CheckCollision(Player* player, MapElement obstElements[MAP_HEIGHT][MAP_WIDT
     }
 
 
-    // ≈сли нет коллизий, обновл€ем позицию игрока
     if (!collision)
     {
         player->position = tempPosition;
@@ -291,11 +290,6 @@ void BulletMovement(Bullet& bullet, Player* player, int dt)
                     bullet.bullet_mas[i].x -= bullet.vx * dt / 1000;
                 else if (bullet.bulletDirection[i] == DIR_RIGHT)
                     bullet.bullet_mas[i].x += bullet.vx * dt / 1000;
-                if (bullet.bullet_mas[i].y + bullet.size_y < 0)
-                {
-                    bullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + bullet.size_y + 1, 0, 0 };
-                    bullet.active_bullet[i] = 0;
-                }
             }
         }
     }
@@ -325,11 +319,6 @@ void EnemyBulletMovement(Enemy_Bullet& enemybullet, Enemy* enemy, int dt)
                     enemybullet.bullet_mas[i].x -= enemybullet.vx * dt / 1000;
                 else if (enemybullet.bulletDirection[i] == DIR_RIGHT)
                     enemybullet.bullet_mas[i].x += enemybullet.vx * dt / 1000;
-                if (enemybullet.bullet_mas[i].y + enemybullet.size_y < 0)
-                {
-                    enemybullet.bullet_mas[i] = { 0, (int)WINDOW_HEIGHT + enemybullet.size_y + 1, 0, 0 };
-                    enemybullet.active_bullet[i] = 0;
-                }
             }
         }
     }
@@ -761,7 +750,6 @@ void UpdateEnemy(Enemy* enemy, Player* player,Enemy_Bullet& enemybullet, MapElem
                         enemy[i].lastFrameTime = cur_time;
                     }
 
-                    // ѕроверка столкновени€ и вызов взрыва могут произойти независимо от рассто€ни€
                     if (SDL_HasIntersection(&tempPosition, &player->position))
                     {
                         Explode(enemy[i].explosion[0], enemy[i].position.x + enemy[i].position.w / 3, enemy[i].position.y + enemy[i].position.h / 3, ren);

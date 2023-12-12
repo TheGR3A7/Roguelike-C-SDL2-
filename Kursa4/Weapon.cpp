@@ -22,7 +22,7 @@ void CreateBullet(Bullet& bullet, Player& player, SDL_Renderer* ren)
         {
             bullet.texture = loadTextureFromFile("BulletBlue.png", &bullet.rect, ren);
         }
-
+        
         bullet.size_x = 16;
         bullet.size_y = 8;
         bullet.dmg = 20;
@@ -107,14 +107,17 @@ void BulletDraw(Bullet bullet, SDL_Renderer* ren)
 
 void InitializeExplosion(Explosion& explosion, SDL_Renderer* ren)
 {
-    explosion.texture = loadTextureFromFile("explosion.png", &explosion.rect, ren);
-    explosion.frameCount = 10;  // Количество кадров в анимации взрыва
-    explosion.frameTime = 150;   // Время между кадрами взрыва
+  //  if (explosion.texture == nullptr)
+  //  {
+        explosion.texture = loadTextureFromFile("explosion.png", &explosion.rect, ren);
+ //   }
+    explosion.frameCount = 10;  
+    explosion.frameTime = 150;   
     explosion.curFrame = 0;
     explosion.lastFrameTime = 0;
     explosion.isActive = false;
 
-    explosion.rect.w = 950 / explosion.frameCount;  // Размер одного кадра
+    explosion.rect.w = 950 / explosion.frameCount;  
     explosion.rect.h = 95;
 }
 
@@ -124,7 +127,7 @@ void Explode(Explosion& explosion, int x, int y, SDL_Renderer* ren)
     explosion.rect.x = x - explosion.rect.w / 3;
     explosion.rect.y = y - explosion.rect.h / 3;
 
-    // Сбросить текущий кадр анимации взрыва
+    
     explosion.curFrame = 0;
     explosion.lastFrameTime = SDL_GetTicks();
 }
@@ -141,7 +144,7 @@ void UpdateExplosion(Explosion& explosion)
             explosion.curFrame = (explosion.curFrame + 1) % explosion.frameCount;
             explosion.lastFrameTime = curTime;
 
-            // Проверка завершения анимации взрыва
+           
             if (explosion.curFrame == explosion.frameCount - 1)
             {
                 explosion.isActive = false;
@@ -154,10 +157,8 @@ void ExplosionDraw(Explosion& explosion, SDL_Renderer* ren)
 {
     if (explosion.isActive)
     {
-        // Рассчитать и установить область прямоугольника для текущего кадра анимации
         SDL_Rect srcRect = { explosion.curFrame * explosion.rect.w, 0, explosion.rect.w, explosion.rect.h };
 
-        // Отрисовка текущего кадра анимации взрыва
         SDL_RenderCopy(ren, explosion.texture, &srcRect, &explosion.rect);
     }
 }
